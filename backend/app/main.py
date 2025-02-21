@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import RedirectResponse
+from fastapi.responses import HTMLResponse
 from app.core.config import settings
 from app.api.v1.api import api_router
 from app.db.init_db import init_db
@@ -23,10 +23,29 @@ app.add_middleware(
     allow_headers=["*"],  # Allows all headers
 )
 
-# Root route redirects to API documentation
-@app.get("/")
+# Root route serves HTML with links
+@app.get("/", response_class=HTMLResponse)
 async def root():
-    return RedirectResponse(url="/docs")
+    return """
+    <html>
+        <head>
+            <title>Cloud 9 API</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 40px; }
+                a { display: block; margin: 10px 0; }
+            </style>
+        </head>
+        <body>
+            <h1>Cloud 9 API</h1>
+            <a href="/docs">API Documentation (Swagger UI)</a>
+            <a href="/redoc">Alternative Documentation (ReDoc)</a>
+            <a href="/openapi.json">OpenAPI Schema</a>
+            <a href="/api/v1/auth">Authentication Endpoints</a>
+            <a href="/api/v1/products">Product Endpoints</a>
+            <a href="/healthz">Health Check</a>
+        </body>
+    </html>
+    """
 
 # Include API router
 app.include_router(api_router, prefix="/api/v1")
