@@ -15,14 +15,17 @@ RUN curl -sSL https://install.python-poetry.org | python3 - && \
     ln -s /opt/poetry/bin/poetry && \
     poetry config virtualenvs.create false
 
-# Copy poetry files
-COPY pyproject.toml poetry.lock ./
+# Copy project files
+COPY pyproject.toml poetry.lock README.md ./
 
 # Install dependencies
-RUN poetry install --no-interaction --no-ansi
+RUN poetry install --no-interaction --no-ansi --no-root
 
 # Copy application code
 COPY . .
+
+# Install project
+RUN poetry install --no-interaction --no-ansi
 
 # Run the application
 CMD ["poetry", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
