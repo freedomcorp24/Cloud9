@@ -2,6 +2,13 @@
 __pycache__/
 *.py[cod]
 *$py.class
+
+# Security sensitive files
+crypto_payments/settings.py
+.env
+*.key
+*.pem
+*.cert
 *.so
 .Python
 build/
