@@ -33,16 +33,12 @@ My Products | {{ block.super }}
                             <td>${{ product.price }}</td>
                             <td>{{ product.stock }}</td>
                             <td class="delivery-options">
-                                <div class="d-flex gap-1">
-                                    {% if product.instant_delivery %}
-                                        <span class="badge bg-success">Instant</span>
-                                    {% endif %}
-                                    {% if product.delivery_fee > 0 %}
-                                        <span class="badge bg-info">Delivery</span>
-                                    {% endif %}
-                                    {% if product.shipping_fee > 0 %}
-                                        <span class="badge bg-warning">Shipping</span>
-                                    {% endif %}
+                                <div class="d-flex flex-wrap gap-1">
+                                    {% with instant=product.instant_delivery delivery=product.delivery_fee shipping=product.shipping_fee %}
+                                        {% if instant %}<span class="badge bg-success">Instant</span>{% endif %}
+                                        {% if delivery > 0 %}<span class="badge bg-info">Delivery</span>{% endif %}
+                                        {% if shipping > 0 %}<span class="badge bg-warning">Shipping</span>{% endif %}
+                                    {% endwith %}
                                 </div>
                             </td>
                             <td>
