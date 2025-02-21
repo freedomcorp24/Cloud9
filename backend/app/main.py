@@ -9,21 +9,10 @@ app = FastAPI(
     title=settings.PROJECT_NAME,
     description="Cloud 9 THC/CBD Marketplace API",
     version="0.1.0",
-    root_path="",
-    docs_url=None,
-    redoc_url=None,
-    openapi_url=None
-)
-
-# Mount API documentation under /api prefix
-app.mount("/api", FastAPI(
-    title=f"{settings.PROJECT_NAME} - API Documentation",
-    description="Cloud 9 THC/CBD Marketplace API Documentation",
-    version="0.1.0",
     docs_url="/docs",
     redoc_url="/redoc",
     openapi_url="/openapi.json"
-))
+)
 
 # Disable CORS. Do not remove this for full-stack development.
 app.add_middleware(
