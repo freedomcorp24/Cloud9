@@ -207,12 +207,16 @@ OSCAR_DEFAULT_CURRENCY = 'USD'
 OSCAR_ALLOW_ANON_CHECKOUT = False
 OSCAR_REQUIRED_ADDRESS_FIELDS = ['first_name', 'last_name', 'line1', 'city', 'country']
 
-# Search settings - Temporarily disabled for initial setup
+# Search settings
 HAYSTACK_CONNECTIONS = {
     'default': {
         'ENGINE': 'haystack.backends.simple_backend.SimpleEngine',
+        'EXCLUDED_INDEXES': [
+            'oscar.apps.search.search_indexes.ProductIndex'
+        ]
     },
 }
+HAYSTACK_SIGNAL_PROCESSOR = 'haystack.signals.RealtimeSignalProcessor'
 
 # Cache settings
 CACHES = {
