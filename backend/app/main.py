@@ -9,9 +9,9 @@ app = FastAPI(
     title=settings.PROJECT_NAME,
     description="Cloud 9 THC/CBD Marketplace API",
     version="0.1.0",
-    docs_url="/api/docs",
-    redoc_url="/api/redoc",
-    openapi_url="/api/openapi.json"
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_url="/openapi.json"
 )
 
 # Disable CORS. Do not remove this for full-stack development.
@@ -26,7 +26,7 @@ app.add_middleware(
 # Root route redirects to API documentation
 @app.get("/")
 async def root():
-    return RedirectResponse(url="/api/docs")
+    return RedirectResponse(url="/docs")
 
 # Include API router
 app.include_router(api_router, prefix="/api/v1")
