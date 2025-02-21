@@ -91,6 +91,7 @@ MIDDLEWARE = [
     'oscar.apps.basket.middleware.BasketMiddleware',
     'django.contrib.flatpages.middleware.FlatpageFallbackMiddleware',
     'tor_access.middleware.TorAccessMiddleware',
+    'marketplace.middleware.RateLimitMiddleware',
 ]
 
 ROOT_URLCONF = 'cloud9.urls'
