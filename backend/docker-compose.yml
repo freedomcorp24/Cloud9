@@ -1,0 +1,98 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=True
+      - SECRET_KEY=dev-secret-key
+      - ALLOWED_HOSTS=*
+      - DB_NAME=cloud9_main
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_HOST=db
+      - DB_PORT=5432
+      - PAYMENT_DB_NAME=cloud9_payments
+      - PAYMENT_DB_USER=postgres
+      - PAYMENT_DB_PASSWORD=postgres
+      - PAYMENT_DB_HOST=payment_db
+      - PAYMENT_DB_PORT=5432
+      - ANALYTICS_DB_NAME=cloud9_analytics
+      - ANALYTICS_DB_USER=postgres
+      - ANALYTICS_DB_PASSWORD=postgres
+      - ANALYTICS_DB_HOST=analytics_db
+      - ANALYTICS_DB_PORT=5432
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - db
+      - payment_db
+      - analytics_db
+      - redis
+      - elasticsearch
+
+  db:
+    image: postgres:15
+    environment:
+      - POSTGRES_DB=cloud9_main
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  payment_db:
+    image: postgres:15
+    environment:
+      - POSTGRES_DB=cloud9_payments
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - postgres_payments_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+
+  analytics_db:
+    image: postgres:15
+    environment:
+      - POSTGRES_DB=cloud9_analytics
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - postgres_analytics_data:/var/lib/postgresql/data
+    ports:
+      - "5434:5432"
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+
+  elasticsearch:
+    image: elasticsearch:8.11.1
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+
+volumes:
+  postgres_data:
+  postgres_payments_data:
+  postgres_analytics_data:
+  redis_data:
+  elasticsearch_data:
