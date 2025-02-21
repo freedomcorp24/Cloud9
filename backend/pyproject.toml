@@ -20,6 +20,7 @@ elasticsearch = {extras = ["async"], version = "^8.17.1"}
 redis = "^5.2.1"
 alembic = "^1.14.1"
 psycopg2-binary = "^2.9.10"
+python-dotenv = "^1.0.1"
 
 
 [build-system]
