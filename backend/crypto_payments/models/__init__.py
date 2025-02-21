@@ -1,6 +1,7 @@
 from .payment import CryptoWallet, CryptoTransaction
 from .blacklist import BlacklistedAddress
 from .admin import PaymentBatch, BatchTransaction, AdminAction
+from .deposit import DepositAddress
 
 __all__ = [
     "CryptoWallet",
@@ -8,5 +9,6 @@ __all__ = [
     "BlacklistedAddress",
     "PaymentBatch",
     "BatchTransaction",
-    "AdminAction"
+    "AdminAction",
+    "DepositAddress"
 ]

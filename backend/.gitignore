@@ -4,6 +4,19 @@ __pycache__/
 *$py.class
 
 # Security sensitive files
+**/settings.py
+!**/settings.example.py
+.env
+*.key
+*.pem
+*.cert
+**/local_settings.py
+
+# Node configuration
+**/node_config.py
+crypto_payments/settings.py
+
+# Security sensitive files
 crypto_payments/settings.py
 .env
 *.key

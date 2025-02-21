@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="deposit-address-detail">
+    <h2>Deposit Address Details</h2>
+    
+    <div class="deposit-info">
+        <p><strong>Currency:</strong> {{ deposit.wallet.currency }}</p>
+        <p><strong>Address:</strong> {{ deposit.address }}</p>
+        <p><strong>Status:</strong> {{ deposit.status }}</p>
+        <p><strong>Required Confirmations:</strong> {{ required_confirmations }}</p>
+        {% if deposit.status == 'active' %}
+            <p><strong>Time Remaining:</strong> {{ time_remaining }} minutes</p>
+        {% endif %}
+    </div>
+    
+    {% if deposit.qr_code %}
+    <div class="qr-code">
+        <h3>QR Code</h3>
+        <img src="{{ deposit.qr_code.url }}" alt="Deposit QR Code">
+    </div>
+    {% endif %}
+    
+    <div class="deposit-instructions">
+        <h3>Instructions</h3>
+        <ul>
+            <li>Send {{ deposit.wallet.currency }} to the address above</li>
+            <li>Address is valid for {{ time_remaining }} minutes</li>
+            <li>Required confirmations: {{ required_confirmations }}</li>
+            <li>Do not send any other currency to this address</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}
