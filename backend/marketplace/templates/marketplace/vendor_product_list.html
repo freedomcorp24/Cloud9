@@ -32,14 +32,16 @@ My Products | {{ block.super }}
                             <td>{{ product.product.title }}</td>
                             <td>${{ product.price }}</td>
                             <td>{{ product.stock }}</td>
-                            <td class="delivery-options">
-                                <div class="d-flex flex-wrap gap-1">
-                                    {% with instant=product.instant_delivery delivery=product.delivery_fee shipping=product.shipping_fee %}
-                                        {% if instant %}<span class="badge bg-success">Instant</span>{% endif %}
-                                        {% if delivery > 0 %}<span class="badge bg-info">Delivery</span>{% endif %}
-                                        {% if shipping > 0 %}<span class="badge bg-warning">Shipping</span>{% endif %}
-                                    {% endwith %}
-                                </div>
+                            <td>
+                                {% if product.instant_delivery %}
+                                <span class="badge bg-success">Instant</span>
+                                {% endif %}
+                                {% if product.delivery_fee > 0 %}
+                                <span class="badge bg-info">Delivery</span>
+                                {% endif %}
+                                {% if product.shipping_fee > 0 %}
+                                <span class="badge bg-warning">Shipping</span>
+                                {% endif %}
                             </td>
                             <td>
                                 <a href="{% url 'marketplace:vendor_product_edit' product.pk %}" class="btn btn-sm btn-outline-primary">Edit</a>
