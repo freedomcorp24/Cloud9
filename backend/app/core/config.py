@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     ANALYTICS_DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost/cloud9_analytics"
     
     # Elasticsearch settings
-    ELASTICSEARCH_URL: str = "http://localhost:9200"
+    ELASTICSEARCH_URL: str = "http://elasticsearch:9200"
     
     # Security
     SECRET_KEY: str = "your-secret-key-here"  # Change in production

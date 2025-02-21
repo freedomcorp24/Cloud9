@@ -1,0 +1,45 @@
+app = "app-bryukarl"
+primary_region = "lax"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  PROJECT_NAME = "Cloud 9"
+  MAIN_DATABASE_URL = "postgresql+asyncpg://postgres:postgres@db:5432/cloud9"
+  PAYMENT_DATABASE_URL = "postgresql+asyncpg://postgres:postgres@payment-db:5432/cloud9_payments"
+  ANALYTICS_DATABASE_URL = "postgresql+asyncpg://postgres:postgres@analytics-db:5432/cloud9_analytics"
+  ELASTICSEARCH_URL = "http://elasticsearch:9200"
+  REDIS_URL = "redis://redis:6379/0"
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ["app"]
+
+[[services]]
+  protocol = "tcp"
+  internal_port = 8000
+  processes = ["app"]
+
+  [[services.ports]]
+    port = 80
+    handlers = ["http"]
+    force_https = true
+
+  [[services.ports]]
+    port = 443
+    handlers = ["tls", "http"]
+  [services.concurrency]
+    type = "connections"
+    hard_limit = 25
+    soft_limit = 20
+
+  [[services.tcp_checks]]
+    interval = "15s"
+    timeout = "2s"
+    grace_period = "1s"
+    restart_limit = 0
