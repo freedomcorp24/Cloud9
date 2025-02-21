@@ -2,7 +2,6 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.api.v1.api import api_router
-from app.search.elastic import init_elasticsearch
 from app.db.init_db import init_db
 
 app = FastAPI(title=settings.PROJECT_NAME)
@@ -27,5 +26,3 @@ async def healthz():
 async def startup_event():
     # Initialize databases
     await init_db()
-    # Initialize Elasticsearch indices
-    await init_elasticsearch()

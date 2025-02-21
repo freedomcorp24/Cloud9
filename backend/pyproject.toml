@@ -11,11 +11,15 @@ fastapi = {extras = ["standard"], version = "^0.115.8"}
 psycopg = {extras = ["binary"], version = "^3.2.4"}
 sqlalchemy = "^2.0.38"
 asyncpg = "^0.30.0"
-elasticsearch-async = "^6.2.0"
 python-jose = {extras = ["cryptography"], version = "^3.4.0"}
 passlib = {extras = ["bcrypt"], version = "^1.7.4"}
 python-multipart = "^0.0.20"
 pydantic-settings = "^2.8.0"
+ruff = "^0.9.7"
+elasticsearch = {extras = ["async"], version = "^8.17.1"}
+redis = "^5.2.1"
+alembic = "^1.14.1"
+psycopg2-binary = "^2.9.10"
 
 
 [build-system]

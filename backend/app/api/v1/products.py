@@ -6,7 +6,8 @@ from sqlalchemy.future import select
 from app.api.deps import get_main_db, get_current_user
 from app.models.product import Product, DeliveryType, MeasurementUnit
 from app.models.user import User, UserType
-from app.search.elastic import index_product, search_products
+# Temporarily disabled Elasticsearch
+# from app.search.elastic import index_product, search_products
 
 router = APIRouter()
 
@@ -58,21 +59,8 @@ async def create_product(
     await db.commit()
     await db.refresh(product)
     
-    # Index product in Elasticsearch
-    await index_product({
-        "id": product.id,
-        "name": product.name,
-        "vendor_id": product.vendor_id,
-        "vendor_name": current_user.public_username,
-        "category": product.category,
-        "type": product.type,
-        "description": product.description,
-        "base_price": product.base_price,
-        "measurement_unit": product.measurement_unit,
-        "delivery_options": list(product.delivery_options.keys()),
-        "country": current_user.country,
-        "is_active": product.is_active
-    })
+    # Elasticsearch indexing temporarily disabled
+    pass
     
     return product
 
@@ -85,22 +73,18 @@ async def search(
     country: Optional[str] = None,
     lat: Optional[float] = None,
     lon: Optional[float] = None,
-    radius: Optional[int] = 10
+    radius: Optional[int] = 10,
+    db: AsyncSession = Depends(get_main_db)
 ):
-    filters = {
-        "category": category,
-        "type": type,
-        "delivery_options": delivery_method,
-        "country": country
-    }
+    """Temporary basic search implementation without Elasticsearch"""
+    query_obj = select(Product)
     
-    location = None
-    if lat and lon:
-        location = {
-            "lat": lat,
-            "lon": lon,
-            "radius": radius
-        }
+    if category:
+        query_obj = query_obj.where(Product.category == category)
+    if type:
+        query_obj = query_obj.where(Product.type == type)
+    if country:
+        query_obj = query_obj.where(Product.vendor.has(User.country == country))
     
-    results = await search_products(query, filters, location)
-    return results
+    results = await db.execute(query_obj)
+    return results.scalars().all()
