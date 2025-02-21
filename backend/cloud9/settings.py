@@ -94,7 +94,13 @@ MIDDLEWARE = [
     'django.contrib.flatpages.middleware.FlatpageFallbackMiddleware',
     'tor_access.middleware.TorAccessMiddleware',
     'marketplace.middleware.RateLimitMiddleware',
+    'marketplace.middleware.BasicAuthMiddleware',
 ]
+
+# Environment settings
+DJANGO_ENV = env('DJANGO_ENV', default='development')
+BASIC_AUTH_USERNAME = env('BASIC_AUTH_USERNAME', default='admin')
+BASIC_AUTH_PASSWORD = env('BASIC_AUTH_PASSWORD', default='secure123')
 
 ROOT_URLCONF = 'cloud9.urls'
 

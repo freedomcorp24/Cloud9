@@ -1,7 +1,29 @@
 from django.http import HttpResponse
+from django.conf import settings
+import base64
 
 class HttpResponseTooManyRequests(HttpResponse):
     status_code = 429
+
+class BasicAuthMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        if settings.DJANGO_ENV == 'test':
+            if 'HTTP_AUTHORIZATION' in request.META:
+                auth = request.META['HTTP_AUTHORIZATION'].split()
+                if len(auth) == 2 and auth[0].lower() == "basic":
+                    username, password = base64.b64decode(auth[1]).decode().split(':')
+                    if (username == settings.BASIC_AUTH_USERNAME and 
+                        password == settings.BASIC_AUTH_PASSWORD):
+                        return self.get_response(request)
+            
+            response = HttpResponse('Unauthorized', status=401)
+            response['WWW-Authenticate'] = 'Basic realm="Test Environment"'
+            return response
+        
+        return self.get_response(request)
 from django.core.cache import cache
 import time
 
