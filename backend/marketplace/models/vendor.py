@@ -1,9 +1,10 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from oscar.apps.partner.abstract_models import AbstractPartner, AbstractStockRecord
 
-class VendorProfile(models.Model):
+class VendorProfile(AbstractPartner):
     """
-    Vendor profile model for marketplace
+    Vendor profile model for marketplace, inheriting from Oscar's AbstractPartner
     """
     user = models.OneToOneField('auth.User', on_delete=models.CASCADE)
     business_name = models.CharField(max_length=100)
@@ -26,18 +27,17 @@ class VendorProfile(models.Model):
     def __str__(self):
         return f"{self.business_name} ({self.user.username})"
 
-class VendorProduct(models.Model):
+class VendorProduct(AbstractStockRecord):
     """
-    Vendor's product listing with delivery options
+    Vendor's product listing with delivery options, inheriting from Oscar's AbstractStockRecord
     """
-    vendor = models.ForeignKey(VendorProfile, on_delete=models.CASCADE)
-    product = models.ForeignKey('catalogue.Product', on_delete=models.CASCADE)
-    price = models.DecimalField(max_digits=10, decimal_places=2)
-    stock = models.IntegerField(default=0)
     instant_delivery = models.BooleanField(default=False)
     delivery_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     shipping_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     pickup_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    
+    class Meta(AbstractStockRecord.Meta):
+        app_label = 'marketplace'
     max_delivery_distance = models.DecimalField(
         max_digits=5,
         decimal_places=2,

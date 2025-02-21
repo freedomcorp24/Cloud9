@@ -1,0 +1,19 @@
+{% extends "oscar/base.html" %}
+
+{% block navigation %}
+    {{ block.super }}
+    {% if user.is_authenticated %}
+        <li><a href="{% url 'support:dashboard' %}">Support</a></li>
+        {% if user.vendor_profile and user.vendor_profile.can_access_dashboard %}
+            <li><a href="{% url 'marketplace:vendor_dashboard' %}">Vendor Dashboard</a></li>
+        {% endif %}
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+    {{ block.super }}
+{% endblock %}
+
+{% block footer %}
+    {{ block.super }}
+{% endblock %}

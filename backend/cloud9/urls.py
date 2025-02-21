@@ -26,4 +26,5 @@ urlpatterns = [
     path('marketplace/', include('marketplace.urls')),
     path('crypto-payments/', include('crypto_payments.urls')),
     path('tor-access/', include('tor_access.urls')),
+    path('support/', include('support.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

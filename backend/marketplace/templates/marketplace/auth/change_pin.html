@@ -1,0 +1,78 @@
+{% extends "oscar/dashboard/layout.html" %}
+
+{% block title %}
+    Change Transaction PIN | {{ block.super }}
+{% endblock %}
+
+{% block breadcrumbs %}
+    <ul class="breadcrumb">
+        <li><a href="{% url 'dashboard:index' %}">Dashboard</a></li>
+        <li><a href="{% url 'marketplace:profile' %}">Profile</a></li>
+        <li class="active">Change Transaction PIN</li>
+    </ul>
+{% endblock %}
+
+{% block dashboard_content %}
+    <div class="row">
+        <div class="col-md-8">
+            <div class="well">
+                <h3>Change Transaction PIN</h3>
+                <p>
+                    Your transaction PIN is required for:
+                    <ul>
+                        <li>Making purchases</li>
+                        <li>Releasing funds for instant orders</li>
+                        <li>Withdrawing funds from your account</li>
+                    </ul>
+                </p>
+                
+                <form method="post" class="form-horizontal">
+                    {% csrf_token %}
+                    
+                    {% for field in form %}
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">
+                                {{ field.label }}
+                            </label>
+                            <div class="col-sm-6">
+                                {{ field }}
+                                <span class="help-block">
+                                    {{ field.help_text }}
+                                </span>
+                                {% if field.errors %}
+                                    <span class="error">
+                                        {{ field.errors }}
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                    
+                    <div class="form-group">
+                        <div class="col-sm-offset-3 col-sm-6">
+                            <button type="submit" class="btn btn-primary">
+                                Change PIN
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="panel panel-info">
+                <div class="panel-heading">
+                    <h3 class="panel-title">PIN Security</h3>
+                </div>
+                <div class="panel-body">
+                    <ul>
+                        <li>PIN must be 6 digits</li>
+                        <li>Only numbers are allowed</li>
+                        <li>3 failed attempts will lock your PIN for 30 minutes</li>
+                        <li>Never share your PIN with anyone</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

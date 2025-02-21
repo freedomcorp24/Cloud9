@@ -1,0 +1,116 @@
+{% extends "oscar/dashboard/layout.html" %}
+
+{% block title %}
+    {{ vendor.user.username }}'s Dashboard | {{ block.super }}
+{% endblock %}
+
+{% block breadcrumbs %}
+    <ul class="breadcrumb">
+        <li>
+            <a href="{% url 'dashboard:index' %}">Dashboard</a>
+        </li>
+        <li class="active">Vendor Dashboard</li>
+    </ul>
+{% endblock %}
+
+{% block header %}
+    <div class="page-header">
+        <h1>{{ vendor.user.username }}'s Dashboard</h1>
+    </div>
+{% endblock %}
+
+{% block dashboard_content %}
+    {% if not vendor.bond_paid and not vendor.bond_waived %}
+        <div class="alert alert-warning">
+            <h4>Vendor Bond Required</h4>
+            <p>
+                To access all vendor features, you must either:
+                <ul>
+                    <li>Pay the €500 vendor bond</li>
+                    <li>Request a bond waiver from support</li>
+                </ul>
+            </p>
+            <div class="btn-group">
+                <a href="{% url 'marketplace:vendor_bond_payment' %}" class="btn btn-primary">
+                    Pay Bond (€500)
+                </a>
+                <a href="{% url 'support:bond_waiver_request' %}" class="btn btn-default">
+                    Request Waiver
+                </a>
+            </div>
+        </div>
+    {% endif %}
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="tabbable dashboard">
+                <ul class="nav nav-tabs">
+                    <li class="active"><a href="#orders" data-toggle="tab">Orders</a></li>
+                    <li><a href="#products" data-toggle="tab">Products</a></li>
+                    <li><a href="#discounts" data-toggle="tab">Discount Codes</a></li>
+                    <li><a href="#support" data-toggle="tab">Support</a></li>
+                </ul>
+                
+                <div class="tab-content">
+                    <div class="tab-pane active" id="orders">
+                        <h2>Orders</h2>
+                        
+                        <div class="sub-header">
+                            <h3>Pending Orders ({{ pending_orders.count }})</h3>
+                        </div>
+                        {% include "marketplace/partials/order_list.html" with orders=pending_orders %}
+                        
+                        <div class="sub-header">
+                            <h3>Accepted Orders ({{ accepted_orders.count }})</h3>
+                        </div>
+                        {% include "marketplace/partials/order_list.html" with orders=accepted_orders %}
+                        
+                        <div class="sub-header">
+                            <h3>Shipped Orders ({{ shipped_orders.count }})</h3>
+                        </div>
+                        {% include "marketplace/partials/order_list.html" with orders=shipped_orders %}
+                        
+                        <div class="sub-header">
+                            <h3>Finalized Orders ({{ finalized_orders.count }})</h3>
+                        </div>
+                        {% include "marketplace/partials/order_list.html" with orders=finalized_orders %}
+                        
+                        <div class="sub-header">
+                            <h3>Disputed Sales ({{ disputed_sales.count }})</h3>
+                        </div>
+                        {% include "marketplace/partials/order_list.html" with orders=disputed_sales %}
+                        
+                        <div class="sub-header">
+                            <h3>Cancelled Sales ({{ cancelled_sales.count }})</h3>
+                        </div>
+                        {% include "marketplace/partials/order_list.html" with orders=cancelled_sales %}
+                    </div>
+                    
+                    <div class="tab-pane" id="products">
+                        <h2>Products</h2>
+                        <a href="{% url 'dashboard:catalogue-product-create' %}" class="btn btn-primary">
+                            <i class="icon-plus"></i> Add New Product
+                        </a>
+                        {% include "marketplace/partials/product_list.html" %}
+                    </div>
+                    
+                    <div class="tab-pane" id="discounts">
+                        <h2>Discount Codes</h2>
+                        <a href="{% url 'dashboard:discount-create' %}" class="btn btn-primary">
+                            <i class="icon-plus"></i> Create Discount Code
+                        </a>
+                        {% include "marketplace/partials/discount_list.html" %}
+                    </div>
+                    
+                    <div class="tab-pane" id="support">
+                        <h2>Support</h2>
+                        <a href="{% url 'support:ticket_create' %}" class="btn btn-primary">
+                            <i class="icon-plus"></i> Open Support Ticket
+                        </a>
+                        {% include "support/partials/ticket_list.html" with tickets=user.support_tickets.all %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

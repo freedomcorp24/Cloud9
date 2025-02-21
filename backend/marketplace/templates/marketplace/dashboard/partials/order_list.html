@@ -1,0 +1,63 @@
+{% load i18n %}
+
+{% if orders %}
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>{% trans "Order ID" %}</th>
+                <th>{% trans "Product" %}</th>
+                <th>{% trans "Customer" %}</th>
+                <th>{% trans "Delivery Type" %}</th>
+                <th>{% trans "Created" %}</th>
+                <th>{% trans "Status" %}</th>
+                <th>{% trans "Actions" %}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in orders %}
+                <tr>
+                    <td>
+                        <a href="{% url 'marketplace:order_detail' pk=order.id %}">
+                            #{{ order.id }}
+                        </a>
+                    </td>
+                    <td>{{ order.product.name }}</td>
+                    <td>{{ order.user.username }}</td>
+                    <td>{{ order.get_delivery_type_display }}</td>
+                    <td>{{ order.created_at|date:"Y-m-d H:i" }}</td>
+                    <td>
+                        <span class="label label-{{ order.status|lower }}">
+                            {{ order.get_status_display }}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="btn-group">
+                            <a href="{% url 'marketplace:order_detail' pk=order.id %}" 
+                               class="btn btn-default btn-sm">
+                                {% trans "View" %}
+                            </a>
+                            {% if order.status == 'pending' %}
+                                <button type="button" 
+                                        class="btn btn-success btn-sm accept-order" 
+                                        data-order-id="{{ order.id }}">
+                                    {% trans "Accept" %}
+                                </button>
+                            {% endif %}
+                            {% if order.status == 'accepted' %}
+                                <button type="button" 
+                                        class="btn btn-info btn-sm mark-shipped" 
+                                        data-order-id="{{ order.id }}">
+                                    {% trans "Mark Shipped" %}
+                                </button>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% else %}
+    <p class="no-data">
+        {% trans "No orders found." %}
+    </p>
+{% endif %}

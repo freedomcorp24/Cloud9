@@ -1,5 +1,10 @@
 from django.http import HttpResponse
 from django.conf import settings
+from django.shortcuts import redirect
+from django.contrib import messages
+from django.utils.translation import gettext_lazy as _
+from django.urls import resolve
+from django.utils import timezone
 import base64
 
 class HttpResponseTooManyRequests(HttpResponse):
@@ -26,6 +31,42 @@ class BasicAuthMiddleware:
         return self.get_response(request)
 from django.core.cache import cache
 import time
+
+class VendorBondMiddleware:
+    """Middleware to enforce vendor bond requirements"""
+    EXEMPT_URLS = [
+        'bond_waiver_request',
+        'vendor_bond_payment',
+        'support_dashboard'
+    ]
+    
+    def __init__(self, get_response):
+        self.get_response = get_response
+        
+    def __call__(self, request):
+        if not request.user.is_authenticated:
+            return self.get_response(request)
+            
+        # Check if accessing vendor-specific URL
+        url_name = resolve(request.path_info).url_name
+        if not url_name or not url_name.startswith('vendor_'):
+            return self.get_response(request)
+            
+        # Skip bond check for exempt URLs
+        if url_name in self.EXEMPT_URLS:
+            return self.get_response(request)
+            
+        # Check vendor bond status
+        if hasattr(request.user, 'vendor_profile'):
+            vendor = request.user.vendor_profile
+            if not vendor.can_access_dashboard:
+                messages.warning(
+                    request,
+                    _('You must pay the €500 vendor bond or request a waiver to access vendor features')
+                )
+                return redirect('support:bond_waiver_request')
+                
+        return self.get_response(request)
 
 class RateLimitMiddleware:
     """

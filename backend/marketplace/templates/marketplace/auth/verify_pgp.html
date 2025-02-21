@@ -1,0 +1,60 @@
+{% extends "oscar/dashboard/layout.html" %}
+
+{% block title %}
+    Verify PGP Key | {{ block.super }}
+{% endblock %}
+
+{% block breadcrumbs %}
+    <ul class="breadcrumb">
+        <li><a href="{% url 'dashboard:index' %}">Dashboard</a></li>
+        <li><a href="{% url 'marketplace:profile' %}">Profile</a></li>
+        <li class="active">Verify PGP Key</li>
+    </ul>
+{% endblock %}
+
+{% block dashboard_content %}
+    <div class="row">
+        <div class="col-md-12">
+            <div class="well">
+                <h3>PGP Key Verification</h3>
+                <p>
+                    To verify ownership of your PGP key, please decrypt the following
+                    message using your private key and enter the verification code below.
+                </p>
+                
+                <div class="encrypted-message">
+                    <pre>{{ encrypted_message }}</pre>
+                </div>
+                
+                <form method="post" class="form-horizontal">
+                    {% csrf_token %}
+                    
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">
+                            {{ form.verification_code.label }}
+                        </label>
+                        <div class="col-sm-6">
+                            {{ form.verification_code }}
+                            <span class="help-block">
+                                {{ form.verification_code.help_text }}
+                            </span>
+                            {% if form.verification_code.errors %}
+                                <span class="error">
+                                    {{ form.verification_code.errors }}
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <div class="col-sm-offset-3 col-sm-6">
+                            <button type="submit" class="btn btn-primary">
+                                Verify PGP Key
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,124 @@
+{% extends "oscar/dashboard/layout.html" %}
+{% load i18n static %}
+
+{% block styles %}
+    {{ block.super }}
+    <link rel="stylesheet" href="{% static 'marketplace/css/wallet.css' %}">
+{% endblock %}
+
+{% block title %}
+    {% trans "Wallet" %} | {{ block.super }}
+{% endblock %}
+
+{% block breadcrumbs %}
+    <ul class="breadcrumb">
+        <li><a href="{% url 'dashboard:index' %}">{% trans "Dashboard" %}</a></li>
+        <li class="active">{% trans "Wallet" %}</li>
+    </ul>
+{% endblock %}
+
+{% block dashboard_content %}
+    <div class="wallet-container">
+        <div class="currency-grid">
+            <div class="currency-card">
+                <div class="currency-header">
+                    <img src="{% static 'marketplace/img/btc.svg' %}" alt="Bitcoin" class="currency-icon">
+                    <h4>Bitcoin (BTC)</h4>
+                </div>
+                <div class="currency-balance">
+                    {{ wallet.btc_balance|floatformat:8 }} BTC
+                </div>
+                <div class="action-buttons">
+                    <a href="{% url 'marketplace:wallet_deposit' currency='btc' %}" class="btn btn-deposit">
+                        {% trans "Deposit" %}
+                    </a>
+                    <a href="{% url 'marketplace:wallet_withdraw' currency='btc' %}" class="btn btn-withdraw">
+                        {% trans "Withdraw" %}
+                    </a>
+                </div>
+            </div>
+            
+            <div class="currency-card">
+                <div class="currency-header">
+                    <img src="{% static 'marketplace/img/xmr.svg' %}" alt="Monero" class="currency-icon">
+                    <h4>Monero (XMR)</h4>
+                </div>
+                <div class="currency-balance">
+                    {{ wallet.xmr_balance|floatformat:12 }} XMR
+                </div>
+                <div class="action-buttons">
+                    <a href="{% url 'marketplace:wallet_deposit' currency='xmr' %}" class="btn btn-deposit">
+                        {% trans "Deposit" %}
+                    </a>
+                    <a href="{% url 'marketplace:wallet_withdraw' currency='xmr' %}" class="btn btn-withdraw">
+                        {% trans "Withdraw" %}
+                    </a>
+                </div>
+            </div>
+            
+            <div class="currency-card">
+                <div class="currency-header">
+                    <img src="{% static 'marketplace/img/usdt.svg' %}" alt="USDT" class="currency-icon">
+                    <h4>USDT</h4>
+                </div>
+                <div class="currency-balance">
+                    {{ wallet.usdt_balance|floatformat:6 }} USDT
+                </div>
+                <div class="action-buttons">
+                    <a href="{% url 'marketplace:wallet_deposit' currency='usdt' %}" class="btn btn-deposit">
+                        {% trans "Deposit" %}
+                    </a>
+                    <a href="{% url 'marketplace:wallet_withdraw' currency='usdt' %}" class="btn btn-withdraw">
+                        {% trans "Withdraw" %}
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="transaction-table">
+            <h3>{% trans "Recent Transactions" %}</h3>
+            {% if transactions %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>{% trans "Date" %}</th>
+                            <th>{% trans "Type" %}</th>
+                            <th>{% trans "Currency" %}</th>
+                            <th>{% trans "Amount" %}</th>
+                            <th>{% trans "Status" %}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for tx in transactions %}
+                            <tr>
+                                <td>{{ tx.created_at|date:"Y-m-d H:i" }}</td>
+                                <td>{{ tx.get_type_display }}</td>
+                                <td>{{ tx.get_currency_display }}</td>
+                                <td>{{ tx.amount|floatformat:8 }}</td>
+                                <td>{{ tx.get_status_display }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p class="no-transactions">{% trans "No recent transactions." %}</p>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}
+
+{% block extrascripts %}
+    {{ block.super }}
+    <script>
+        // Add smooth transitions for currency cards
+        document.querySelectorAll('.currency-card').forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                card.style.transform = 'translateY(-2px)';
+            });
+            
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = 'translateY(0)';
+            });
+        });
+    </script>
+{% endblock %}

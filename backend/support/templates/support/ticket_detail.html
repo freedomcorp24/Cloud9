@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="ticket-detail">
+    <div class="ticket-header">
+        <h1>{{ ticket.subject }}</h1>
+        <div class="ticket-meta">
+            <span class="status {{ ticket.status }}">
+                {{ ticket.get_status_display }}
+            </span>
+            <span class="category">{{ ticket.category.name }}</span>
+            <span class="created">
+                Opened {{ ticket.created_at|timesince }} ago
+            </span>
+        </div>
+    </div>
+    
+    <div class="ticket-description">
+        {{ ticket.description|linebreaks }}
+    </div>
+    
+    <div class="ticket-messages">
+        {% for message in messages %}
+        <div class="message {% if message.message_type == 'staff' %}staff{% elif message.message_type == 'system' %}system{% else %}user{% endif %}">
+            <div class="message-meta">
+                <span class="author">
+                    {{ message.user.get_full_name|default:message.user.username }}
+                </span>
+                <span class="timestamp">
+                    {{ message.created_at|timesince }} ago
+                </span>
+            </div>
+            <div class="message-content">
+                {{ message.message|linebreaks }}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    {% if ticket.status != 'closed' %}
+    <div class="reply-form">
+        <h3>Add Reply</h3>
+        <form method="post" action="{% url 'support:message_create' ticket.pk %}">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-primary">Send Reply</button>
+        </form>
+    </div>
+    {% endif %}
+    
+    {% if can_resolve and ticket.status != 'closed' %}
+    <div class="admin-actions">
+        <form method="post" action="{% url 'support:ticket_resolve' ticket.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-success">
+                Mark as Resolved
+            </button>
+        </form>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

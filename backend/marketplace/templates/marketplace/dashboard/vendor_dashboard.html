@@ -1,0 +1,96 @@
+{% extends "oscar/dashboard/layout.html" %}
+{% load i18n %}
+
+{% block title %}
+    {% trans "Vendor Dashboard" %} | {{ block.super }}
+{% endblock %}
+
+{% block breadcrumbs %}
+    <ul class="breadcrumb">
+        <li><a href="{% url 'dashboard:index' %}">{% trans "Dashboard" %}</a></li>
+        <li class="active">{% trans "Vendor Dashboard" %}</li>
+    </ul>
+{% endblock %}
+
+{% block dashboard_content %}
+    <div class="row">
+        <div class="col-md-12">
+            <div class="tabbable dashboard-tabs">
+                <ul class="nav nav-tabs">
+                    <li class="active">
+                        <a href="#open-sales" data-toggle="tab">
+                            {% trans "Open Sales" %}
+                            <span class="badge">{{ open_sales|length }}</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#pending" data-toggle="tab">
+                            {% trans "Pending" %}
+                            <span class="badge">{{ pending_orders|length }}</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#accepted" data-toggle="tab">
+                            {% trans "Accepted" %}
+                            <span class="badge">{{ accepted_orders|length }}</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#shipped" data-toggle="tab">
+                            {% trans "Shipped" %}
+                            <span class="badge">{{ shipped_orders|length }}</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#finalized" data-toggle="tab">
+                            {% trans "Finalized" %}
+                            <span class="badge">{{ finalized_orders|length }}</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#disputed" data-toggle="tab">
+                            {% trans "Disputed" %}
+                            <span class="badge">{{ disputed_sales|length }}</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#cancelled" data-toggle="tab">
+                            {% trans "Cancelled" %}
+                            <span class="badge">{{ cancelled_sales|length }}</span>
+                        </a>
+                    </li>
+                </ul>
+                
+                <div class="tab-content">
+                    <div class="tab-pane active" id="open-sales">
+                        {% include "marketplace/dashboard/partials/order_list.html" with orders=open_sales %}
+                    </div>
+                    
+                    <div class="tab-pane" id="pending">
+                        {% include "marketplace/dashboard/partials/order_list.html" with orders=pending_orders %}
+                    </div>
+                    
+                    <div class="tab-pane" id="accepted">
+                        {% include "marketplace/dashboard/partials/order_list.html" with orders=accepted_orders %}
+                    </div>
+                    
+                    <div class="tab-pane" id="shipped">
+                        {% include "marketplace/dashboard/partials/order_list.html" with orders=shipped_orders %}
+                    </div>
+                    
+                    <div class="tab-pane" id="finalized">
+                        {% include "marketplace/dashboard/partials/order_list.html" with orders=finalized_orders %}
+                    </div>
+                    
+                    <div class="tab-pane" id="disputed">
+                        {% include "marketplace/dashboard/partials/order_list.html" with orders=disputed_sales %}
+                    </div>
+                    
+                    <div class="tab-pane" id="cancelled">
+                        {% include "marketplace/dashboard/partials/order_list.html" with orders=cancelled_sales %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

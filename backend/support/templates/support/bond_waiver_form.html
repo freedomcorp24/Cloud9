@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="bond-waiver-request">
+    <h1>Request Vendor Bond Waiver</h1>
+    
+    <div class="info-box">
+        <h3>Vendor Bond Requirement</h3>
+        <p>
+            To access vendor features, a bond of €{{ bond_amount }} is required.
+            You may request a waiver by explaining your circumstances below.
+        </p>
+    </div>
+    
+    <form method="post">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label for="id_description">
+                Please explain why you are requesting a bond waiver:
+            </label>
+            {{ form.description }}
+            {% if form.description.errors %}
+            <div class="error-messages">
+                {{ form.description.errors }}
+            </div>
+            {% endif %}
+        </div>
+        
+        <button type="submit" class="btn btn-primary">
+            Submit Waiver Request
+        </button>
+    </form>
+</div>
+{% endblock %}

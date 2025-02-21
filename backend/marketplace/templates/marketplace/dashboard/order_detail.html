@@ -1,0 +1,176 @@
+{% extends "oscar/dashboard/layout.html" %}
+{% load i18n %}
+
+{% block title %}
+    {% trans "Order" %} #{{ order.id }} | {{ block.super }}
+{% endblock %}
+
+{% block breadcrumbs %}
+    <ul class="breadcrumb">
+        <li><a href="{% url 'dashboard:index' %}">{% trans "Dashboard" %}</a></li>
+        <li><a href="{% url 'marketplace:vendor_dashboard' %}">{% trans "Vendor Dashboard" %}</a></li>
+        <li class="active">{% trans "Order" %} #{{ order.id }}</li>
+    </ul>
+{% endblock %}
+
+{% block dashboard_content %}
+    <div class="row">
+        <div class="col-md-8">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">{% trans "Order Details" %}</h3>
+                </div>
+                <div class="panel-body">
+                    <dl class="dl-horizontal">
+                        <dt>{% trans "Order ID" %}</dt>
+                        <dd>#{{ order.id }}</dd>
+                        
+                        <dt>{% trans "Product" %}</dt>
+                        <dd>{{ order.product.name }}</dd>
+                        
+                        <dt>{% trans "Quantity" %}</dt>
+                        <dd>{{ order.quantity }}</dd>
+                        
+                        <dt>{% trans "Customer" %}</dt>
+                        <dd>{{ order.user.username }}</dd>
+                        
+                        <dt>{% trans "Delivery Type" %}</dt>
+                        <dd>{{ order.get_delivery_type_display }}</dd>
+                        
+                        <dt>{% trans "Status" %}</dt>
+                        <dd>
+                            <span class="label label-{{ order.status|lower }}">
+                                {{ order.get_status_display }}
+                            </span>
+                        </dd>
+                        
+                        <dt>{% trans "Created" %}</dt>
+                        <dd>{{ order.created_at|date:"Y-m-d H:i" }}</dd>
+                        
+                        {% if order.tracking_number %}
+                            <dt>{% trans "Tracking Number" %}</dt>
+                            <dd>{{ order.tracking_number }}</dd>
+                        {% endif %}
+                        
+                        {% if order.estimated_delivery %}
+                            <dt>{% trans "Estimated Delivery" %}</dt>
+                            <dd>{{ order.estimated_delivery|date:"Y-m-d H:i" }}</dd>
+                        {% endif %}
+                    </dl>
+                    
+                    <h4>{% trans "Delivery Address" %}</h4>
+                    <pre>{{ order.delivery_address }}</pre>
+                    
+                    {% if order.delivery_instructions %}
+                        <h4>{% trans "Delivery Instructions" %}</h4>
+                        <pre>{{ order.delivery_instructions }}</pre>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">{% trans "Status History" %}</h3>
+                </div>
+                <div class="panel-body">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>{% trans "Status" %}</th>
+                                <th>{% trans "Changed By" %}</th>
+                                <th>{% trans "Changed At" %}</th>
+                                <th>{% trans "Notes" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for status in status_history %}
+                                <tr>
+                                    <td>
+                                        <span class="label label-{{ status.status|lower }}">
+                                            {{ status.get_status_display }}
+                                        </span>
+                                    </td>
+                                    <td>{{ status.changed_by|default:_("System") }}</td>
+                                    <td>{{ status.changed_at|date:"Y-m-d H:i" }}</td>
+                                    <td>{{ status.notes|default:"-" }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">{% trans "Actions" %}</h3>
+                </div>
+                <div class="panel-body">
+                    {% if order.status == 'pending' %}
+                        <button type="button" 
+                                class="btn btn-success btn-block accept-order" 
+                                data-order-id="{{ order.id }}">
+                            {% trans "Accept Order" %}
+                        </button>
+                    {% endif %}
+                    
+                    {% if order.status == 'accepted' %}
+                        <button type="button" 
+                                class="btn btn-info btn-block mark-shipped" 
+                                data-order-id="{{ order.id }}">
+                            {% trans "Mark as Shipped" %}
+                        </button>
+                    {% endif %}
+                    
+                    {% if order.status == 'shipped' %}
+                        <p class="text-muted">
+                            {% trans "Waiting for buyer to finalize" %}
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            {% if order.delivery_type == 'instant' and order.status == 'accepted' %}
+                <div class="panel panel-warning">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">{% trans "Instant Delivery Timer" %}</h3>
+                    </div>
+                    <div class="panel-body">
+                        <div class="countdown" data-expires="{{ order.timeframe.auto_finalize_at|date:'c' }}">
+                            {% trans "Time remaining" %}: <span class="time-remaining"></span>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}
+
+{% block extrascripts %}
+    {{ block.super }}
+    <script>
+        // Countdown timer for instant delivery
+        document.querySelectorAll('.countdown').forEach(el => {
+            const expires = new Date(el.dataset.expires);
+            const timeSpan = el.querySelector('.time-remaining');
+            
+            function updateTimer() {
+                const now = new Date();
+                const diff = expires - now;
+                
+                if (diff <= 0) {
+                    timeSpan.textContent = '{% trans "Expired" %}';
+                    return;
+                }
+                
+                const hours = Math.floor(diff / 3600000);
+                const minutes = Math.floor((diff % 3600000) / 60000);
+                timeSpan.textContent = `${hours}h ${minutes}m`;
+            }
+            
+            updateTimer();
+            setInterval(updateTimer, 60000);
+        });
+    </script>
+{% endblock %}

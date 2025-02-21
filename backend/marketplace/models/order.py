@@ -2,11 +2,13 @@ from django.db import models
 from django.conf import settings
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils.translation import gettext_lazy as _
+from oscar.apps.order.abstract_models import AbstractOrder
 from .vendor import VendorProfile, VendorProduct
+from .order_status import OrderStatus
 
-class DeliveryOrder(models.Model):
+class DeliveryOrder(AbstractOrder):
     """
-    Order model for tracking deliveries
+    Order model for tracking deliveries, inheriting from Oscar's AbstractOrder
     """
     DELIVERY_TYPES = [
         ('instant', 'Instant Delivery'),
@@ -14,16 +16,12 @@ class DeliveryOrder(models.Model):
         ('pickup', 'Pickup')
     ]
     
-    STATUS_CHOICES = [
-        ('pending', 'Pending'),
-        ('processing', 'Processing'),
-        ('in_transit', 'In Transit'),
-        ('delivered', 'Delivered'),
-        ('cancelled', 'Cancelled'),
-        ('disputed', 'Disputed')
-    ]
+    class Meta:
+        app_label = 'marketplace'
     
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    # Status is now tracked through OrderStatus model
+    
+    # Inheriting core fields from AbstractOrder
     vendor = models.ForeignKey(VendorProfile, on_delete=models.CASCADE)
     product = models.ForeignKey(VendorProduct, on_delete=models.CASCADE)
     quantity = models.IntegerField(
@@ -33,7 +31,25 @@ class DeliveryOrder(models.Model):
         ]
     )
     delivery_type = models.CharField(max_length=20, choices=DELIVERY_TYPES)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    @property
+    def status(self):
+        """Get current order status"""
+        try:
+            return self.status_history.latest().status
+        except OrderStatus.DoesNotExist:
+            return 'pending'
+            
+    def set_status(self, new_status, changed_by=None, notes=''):
+        """Set new order status with tracking"""
+        if new_status not in dict(OrderStatus.STATUS_CHOICES):
+            raise ValueError(f"Invalid status: {new_status}")
+            
+        OrderStatus.objects.create(
+            order=self,
+            status=new_status,
+            changed_by=changed_by,
+            notes=notes
+        )
     delivery_address = models.TextField(max_length=500)
     delivery_instructions = models.TextField(max_length=500, blank=True)
     tracking_number = models.CharField(max_length=100, blank=True)
@@ -54,6 +70,8 @@ class OrderDispute(models.Model):
     """
     Model for handling order disputes
     """
+    class Meta:
+        app_label = 'marketplace'
     DISPUTE_TYPES = [
         ('quality', 'Product Quality'),
         ('delivery', 'Delivery Issues'),
@@ -76,6 +94,7 @@ class OrderDispute(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:
+        app_label = 'marketplace'
         verbose_name = _('Order Dispute')
         verbose_name_plural = _('Order Disputes')
         ordering = ['-created_at']
@@ -87,6 +106,8 @@ class DeliveryTracking(models.Model):
     """
     Real-time tracking for deliveries
     """
+    class Meta:
+        app_label = 'marketplace'
     order = models.ForeignKey(DeliveryOrder, on_delete=models.CASCADE)
     latitude = models.DecimalField(
         max_digits=9,
@@ -108,6 +129,7 @@ class DeliveryTracking(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
     
     class Meta:
+        app_label = 'marketplace'
         verbose_name = _('Delivery Tracking')
         verbose_name_plural = _('Delivery Tracking')
         ordering = ['-timestamp']

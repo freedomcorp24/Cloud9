@@ -1,0 +1,77 @@
+{% extends "oscar/dashboard/layout.html" %}
+{% load i18n %}
+
+{% block title %}
+    {% trans "Deposit" %} {{ currency|upper }} | {{ block.super }}
+{% endblock %}
+
+{% block breadcrumbs %}
+    <ul class="breadcrumb">
+        <li><a href="{% url 'dashboard:index' %}">{% trans "Dashboard" %}</a></li>
+        <li><a href="{% url 'marketplace:wallet_dashboard' %}">{% trans "Wallet" %}</a></li>
+        <li class="active">{% trans "Deposit" %} {{ currency|upper }}</li>
+    </ul>
+{% endblock %}
+
+{% block dashboard_content %}
+    <div class="row">
+        <div class="col-md-8">
+            <div class="well">
+                <h3>{% trans "Deposit" %} {{ currency|upper }}</h3>
+                
+                {% if deposit_address %}
+                    <div class="alert alert-info">
+                        <p>{% trans "Send your" %} {{ currency|upper }} {% trans "to this address:" %}</p>
+                        <div class="input-group">
+                            <input type="text" class="form-control" value="{{ deposit_address.address }}" readonly>
+                            <span class="input-group-btn">
+                                <button class="btn btn-default copy-address" type="button" data-clipboard-text="{{ deposit_address.address }}">
+                                    {% trans "Copy" %}
+                                </button>
+                            </span>
+                        </div>
+                    </div>
+                    
+                    {% if qr_code %}
+                        <div class="text-center">
+                            <img src="data:image/png;base64,{{ qr_code }}" alt="QR Code" class="img-responsive center-block">
+                        </div>
+                    {% endif %}
+                    
+                    <div class="alert alert-warning">
+                        <ul>
+                            <li>{% trans "This address is valid for 2 hours" %}</li>
+                            <li>{% trans "Only send" %} {{ currency|upper }} {% trans "to this address" %}</li>
+                            <li>{% trans "Minimum confirmations required:" %} {{ min_confirmations }}</li>
+                        </ul>
+                    </div>
+                {% else %}
+                    <div class="alert alert-danger">
+                        {% trans "Failed to generate deposit address. Please try again later." %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="panel panel-info">
+                <div class="panel-heading">
+                    <h3 class="panel-title">{% trans "Current Balance" %}</h3>
+                </div>
+                <div class="panel-body">
+                    <p class="lead">
+                        {{ wallet|getattr:currency|add:"_balance"|floatformat:8 }} {{ currency|upper }}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extrascripts %}
+    {{ block.super }}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.8/clipboard.min.js"></script>
+    <script>
+        new ClipboardJS('.copy-address');
+    </script>
+{% endblock %}

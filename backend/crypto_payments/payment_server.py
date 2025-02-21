@@ -9,8 +9,8 @@ import hashlib
 import time
 import logging
 import requests
-from .models.payment import CryptoWallet, CryptoTransaction
-from .models.blacklist import BlacklistedAddress
+from .models import CryptoWallet, CryptoTransaction
+from .models.blacklist import AddressBlacklist
 from .node_integration import NodeFactory
 
 logger = logging.getLogger(__name__)
@@ -83,7 +83,7 @@ class SecurityCheck:
         """
         try:
             # Check local blacklist
-            if BlacklistedAddress.objects.filter(address=address).exists():
+            if AddressBlacklist.objects.filter(address=address).exists():
                 return False
             
             # Check recent withdrawal history

@@ -1,0 +1,288 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load static %}
+{% load tracking %}
+
+{% block extra_css %}
+<link href="https://api.mapbox.com/mapbox-gl-js/v2.8.2/mapbox-gl.css" rel="stylesheet">
+<style>
+    .tracking-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    #map {
+        width: 100%;
+        height: 400px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+    .tracking-controls {
+        background: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .status-buttons {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 10px;
+        margin-top: 20px;
+    }
+    .tracking-toggle {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px;
+        border: 1px solid #e0e0e0;
+        border-radius: 4px;
+    }
+    .location-info {
+        margin-top: 20px;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 4px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="tracking-container">
+    <div class="alert alert-info" role="alert">
+        <h4 class="alert-heading">{% trans "Delivery Tracking" %}</h4>
+        <p>{% trans "Order" %} #{{ order.id }} - {{ order.product.name }}</p>
+    </div>
+
+    <div id="map"></div>
+    
+    <div class="tracking-controls">
+        <div class="tracking-toggle">
+            <div class="form-check form-switch">
+                <input type="checkbox" 
+                       class="form-check-input" 
+                       id="realtimeToggle">
+                <label class="form-check-label" for="realtimeToggle">
+                    {% trans "Enable real-time location tracking" %}
+                </label>
+                <input type="hidden" id="trackingMode" value="{{ tracking.tracking_mode }}">
+            </div>
+            <small class="text-muted ms-2">
+                {% trans "Requires location services to be enabled" %}
+            </small>
+        </div>
+
+        <div id="manualControls" class="status-buttons">
+            <button class="btn btn-outline-primary manual-status-btn" 
+                    data-status="on_way">
+                <i class="fas fa-truck"></i>
+                {% trans "Mark as On Way" %}
+            </button>
+            
+            <button class="btn btn-outline-warning manual-status-btn" 
+                    data-status="close">
+                <i class="fas fa-map-marker-alt"></i>
+                {% trans "Mark as Close" %}
+            </button>
+            
+            <button class="btn btn-outline-success manual-status-btn" 
+                    data-status="arrived">
+                <i class="fas fa-check-circle"></i>
+                {% trans "Mark as Arrived" %}
+            </button>
+        </div>
+
+        <div class="location-info">
+            <h5>{% trans "Current Location" %}</h5>
+            <p id="locationStatus">
+                {% if tracking.tracking_mode == 'realtime' %}
+                    {% trans "Real-time tracking enabled" %}
+                {% else %}
+                    {% trans "Manual updates mode" %}
+                {% endif %}
+            </p>
+            <p id="coordinates" class="text-muted"></p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://api.mapbox.com/mapbox-gl-js/v2.8.2/mapbox-gl.js"></script>
+<script>
+    const orderId = "{{ order.id }}";
+    let socket = null;
+    let map = null;
+    let marker = null;
+    
+    // Initialize map
+    mapboxgl.accessToken = '{{ mapbox_token }}';
+    
+    function initializeMap() {
+        map = new mapboxgl.Map({
+            container: 'map',
+            style: 'mapbox://styles/mapbox/streets-v11',
+            center: [{{ tracking.current_longitude|default:0 }}, 
+                    {{ tracking.current_latitude|default:0 }}],
+            zoom: 13
+        });
+
+        marker = new mapboxgl.Marker()
+            .setLngLat([{{ tracking.current_longitude|default:0 }}, 
+                       {{ tracking.current_latitude|default:0 }}])
+            .addTo(map);
+    }
+    
+    function updateLocation(lat, lng) {
+        if (marker && map) {
+            const newLocation = [lng, lat];
+            marker.setLngLat(newLocation);
+            map.setCenter(newLocation);
+            
+            document.getElementById('coordinates').textContent = 
+                `Lat: ${lat.toFixed(6)}, Lng: ${lng.toFixed(6)}`;
+        }
+    }
+    
+    function startLocationTracking() {
+        if ("geolocation" in navigator) {
+            socket = new WebSocket(
+                `ws://${window.location.host}/ws/delivery/${orderId}/`
+            );
+            
+            socket.onopen = () => {
+                document.getElementById('locationStatus').textContent = 
+                    '{% trans "Real-time tracking active" %}';
+                    
+                // Start watching position
+                navigator.geolocation.watchPosition(
+                    position => {
+                        const { latitude, longitude } = position.coords;
+                        
+                        socket.send(JSON.stringify({
+                            type: 'location_update',
+                            latitude: latitude,
+                            longitude: longitude
+                        }));
+                        
+                        updateLocation(latitude, longitude);
+                    },
+                    error => {
+                        console.error('Location error:', error);
+                        document.getElementById('locationStatus').textContent = 
+                            '{% trans "Error getting location" %}';
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        maximumAge: 30000,
+                        timeout: 27000
+                    }
+                );
+            };
+            
+            socket.onerror = () => {
+                document.getElementById('locationStatus').textContent = 
+                    '{% trans "Error connecting to tracking server" %}';
+            };
+        } else {
+            document.getElementById('locationStatus').textContent = 
+                '{% trans "Location services not available" %}';
+        }
+    }
+    
+    function stopLocationTracking() {
+        if (socket) {
+            socket.close();
+            socket = null;
+        }
+        document.getElementById('locationStatus').textContent = 
+            '{% trans "Manual updates mode" %}';
+    }
+    
+    // Initialize map on page load
+    document.addEventListener('DOMContentLoaded', initializeMap);
+    
+    // Toggle real-time tracking
+    document.getElementById('realtimeToggle').addEventListener('change', async (e) => {
+        const enabled = e.target.checked;
+        const manualButtons = document.querySelectorAll('#manualControls button');
+        
+        try {
+            const response = await fetch(`/api/delivery/${orderId}/tracking-mode/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    mode: enabled ? 'realtime' : 'manual'
+                })
+            });
+            
+            if (response.ok) {
+                manualButtons.forEach(btn => btn.disabled = enabled);
+                
+                if (enabled) {
+                    startLocationTracking();
+                } else {
+                    stopLocationTracking();
+                }
+            }
+        } catch (error) {
+            console.error('Error updating tracking mode:', error);
+        }
+    });
+    
+    // Manual status updates
+    document.querySelectorAll('#manualControls button').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            try {
+                const response = await fetch(`/api/delivery/${orderId}/status/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({
+                        status: btn.dataset.status
+                    })
+                });
+                
+                if (response.ok) {
+                    document.getElementById('locationStatus').textContent = 
+                        `{% trans "Status updated:" %} ${btn.textContent.trim()}`;
+                }
+            } catch (error) {
+                console.error('Error updating status:', error);
+            }
+        });
+    });
+    
+    // Initialize UI state
+    document.addEventListener('DOMContentLoaded', () => {
+        const toggle = document.getElementById('realtimeToggle');
+        const trackingMode = document.getElementById('trackingMode');
+        const manualButtons = document.querySelectorAll('.manual-status-btn');
+        
+        function updateUIState() {
+            const isRealtime = trackingMode.value === 'realtime';
+            toggle.checked = isRealtime;
+            
+            manualButtons.forEach(btn => {
+                btn.disabled = isRealtime;
+            });
+            
+            if (isRealtime) {
+                startLocationTracking();
+            }
+        }
+        
+        updateUIState();
+        
+        // Handle toggle changes
+        toggle.addEventListener('change', () => {
+            trackingMode.value = toggle.checked ? 'realtime' : 'manual';
+            updateUIState();
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,81 @@
+{% extends "oscar/dashboard/layout.html" %}
+{% load i18n %}
+
+{% block title %}
+    {% trans "Withdraw" %} {{ currency|upper }} | {{ block.super }}
+{% endblock %}
+
+{% block breadcrumbs %}
+    <ul class="breadcrumb">
+        <li><a href="{% url 'dashboard:index' %}">{% trans "Dashboard" %}</a></li>
+        <li><a href="{% url 'marketplace:wallet_dashboard' %}">{% trans "Wallet" %}</a></li>
+        <li class="active">{% trans "Withdraw" %} {{ currency|upper }}</li>
+    </ul>
+{% endblock %}
+
+{% block dashboard_content %}
+    <div class="row">
+        <div class="col-md-8">
+            <div class="well">
+                <h3>{% trans "Withdraw" %} {{ currency|upper }}</h3>
+                
+                <form method="post" class="form-horizontal">
+                    {% csrf_token %}
+                    
+                    {% for field in form %}
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">
+                                {{ field.label }}
+                            </label>
+                            <div class="col-sm-6">
+                                {{ field }}
+                                <span class="help-block">
+                                    {{ field.help_text }}
+                                </span>
+                                {% if field.errors %}
+                                    <span class="error">
+                                        {{ field.errors }}
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                    
+                    <div class="form-group">
+                        <div class="col-sm-offset-3 col-sm-6">
+                            <button type="submit" class="btn btn-primary">
+                                {% trans "Withdraw" %}
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="panel panel-info">
+                <div class="panel-heading">
+                    <h3 class="panel-title">{% trans "Available Balance" %}</h3>
+                </div>
+                <div class="panel-body">
+                    <p class="lead">
+                        {{ balance|floatformat:8 }} {{ currency|upper }}
+                    </p>
+                </div>
+            </div>
+            
+            <div class="panel panel-warning">
+                <div class="panel-heading">
+                    <h3 class="panel-title">{% trans "Important Notes" %}</h3>
+                </div>
+                <div class="panel-body">
+                    <ul>
+                        <li>{% trans "Double check the withdrawal address" %}</li>
+                        <li>{% trans "Transaction PIN required for withdrawals" %}</li>
+                        <li>{% trans "Withdrawals cannot be reversed" %}</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

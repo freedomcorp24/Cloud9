@@ -39,24 +39,31 @@ INSTALLED_APPS = [
     'django.contrib.sites',
     'django.contrib.flatpages',
 
-    # Oscar apps
+    # Third party
+    'widget_tweaks',
+    'haystack',
+    'django_redis',
+
+    # Oscar apps - core
     'oscar.config.Shop',
-    'oscar.apps.analytics.apps.AnalyticsConfig',
-    'oscar.apps.checkout.apps.CheckoutConfig',
-    'oscar.apps.address.apps.AddressConfig',
-    'oscar.apps.shipping.apps.ShippingConfig',
-    'oscar.apps.catalogue.apps.CatalogueConfig',
+    'oscar.apps.customer.apps.CustomerConfig',  # For user profiles
+    'oscar.apps.address.apps.AddressConfig',  # For addresses
+    'oscar.apps.catalogue.apps.CatalogueConfig',  # For products
     'oscar.apps.catalogue.reviews.apps.CatalogueReviewsConfig',
-    'oscar.apps.communication.apps.CommunicationConfig',
-    'oscar.apps.partner.apps.PartnerConfig',
-    'oscar.apps.basket.apps.BasketConfig',
-    'oscar.apps.payment.apps.PaymentConfig',
-    'oscar.apps.offer.apps.OfferConfig',
-    'oscar.apps.order.apps.OrderConfig',
-    'oscar.apps.customer.apps.CustomerConfig',
-    'oscar.apps.search.apps.SearchConfig',
-    'oscar.apps.voucher.apps.VoucherConfig',
-    'oscar.apps.wishlists.apps.WishlistsConfig',
+    'oscar.apps.partner.apps.PartnerConfig',  # For stock records
+    'oscar.apps.basket.apps.BasketConfig',  # For shopping cart
+    'oscar.apps.payment.apps.PaymentConfig',  # For payments
+    'oscar.apps.offer.apps.OfferConfig',  # For promotions
+    'oscar.apps.order.apps.OrderConfig',  # For orders
+    'oscar.apps.checkout.apps.CheckoutConfig',  # For checkout
+    'oscar.apps.shipping.apps.ShippingConfig',  # For shipping
+    'oscar.apps.voucher.apps.VoucherConfig',  # For vouchers
+    'oscar.apps.wishlists.apps.WishlistsConfig',  # For wishlists
+    'oscar.apps.communication.apps.CommunicationConfig',  # For emails
+    'oscar.apps.search.apps.SearchConfig',  # For search
+    'oscar.apps.analytics.apps.AnalyticsConfig',  # For analytics
+
+    # Oscar apps - dashboard
     'oscar.apps.dashboard.apps.DashboardConfig',
     'oscar.apps.dashboard.reports.apps.ReportsDashboardConfig',
     'oscar.apps.dashboard.users.apps.UsersDashboardConfig',
@@ -70,13 +77,9 @@ INSTALLED_APPS = [
     'oscar.apps.dashboard.vouchers.apps.VouchersDashboardConfig',
     'oscar.apps.dashboard.communications.apps.CommunicationsDashboardConfig',
     'oscar.apps.dashboard.shipping.apps.ShippingDashboardConfig',
-
-    # Third party
-    'widget_tweaks',
-    'haystack',
-    'django_redis',
     
     # Custom apps
+    'support.apps.SupportConfig',
     'marketplace.apps.MarketplaceConfig',
     'crypto_payments.apps.CryptoPaymentsConfig',
     'tor_access.apps.TorAccessConfig',
@@ -86,10 +89,15 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
+    'marketplace.middleware.javascript.TorJavaScriptMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'marketplace.middleware.VendorBondMiddleware',
+    'marketplace.middleware.LastOnlineMiddleware',
+    'marketplace.middleware.PGPAuthenticationMiddleware',
+    'marketplace.middleware.auth.TransactionPINMiddleware',
     'oscar.apps.basket.middleware.BasketMiddleware',
     'django.contrib.flatpages.middleware.FlatpageFallbackMiddleware',
     'tor_access.middleware.TorAccessMiddleware',
@@ -206,6 +214,30 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Site ID
 SITE_ID = 1
 
+# Supported Currencies
+SUPPORTED_CURRENCIES = [
+    ('USD', 'US Dollar'),
+    ('EUR', 'Euro'),
+    ('GBP', 'British Pound'),
+    ('BTC', 'Bitcoin'),
+    ('XMR', 'Monero'),
+    ('USDT', 'Tether')
+]
+
+# Countries List
+COUNTRIES = [
+    ('US', 'United States'),
+    ('CA', 'Canada'),
+    ('GB', 'United Kingdom'),
+    ('AU', 'Australia'),
+    ('NZ', 'New Zealand'),
+    ('DE', 'Germany'),
+    ('FR', 'France'),
+    ('ES', 'Spain'),
+    ('IT', 'Italy'),
+    ('NL', 'Netherlands')
+]
+
 # Oscar settings
 OSCAR_SHOP_NAME = 'Cloud 9'
 OSCAR_SHOP_TAGLINE = 'THC/CBD Marketplace'
@@ -250,3 +282,32 @@ if not DEBUG:
     SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
+
+# Payment Server Settings
+PAYMENT_SERVER_KEY = env('PAYMENT_SERVER_KEY', default='THC9CBD#2025!PaymentKey')
+DAILY_WITHDRAWAL_LIMIT = env('DAILY_WITHDRAWAL_LIMIT', default='5.0')
+MONTHLY_WITHDRAWAL_LIMIT = env('MONTHLY_WITHDRAWAL_LIMIT', default='100.0')
+
+# Cryptocurrency Settings
+CRYPTO_API_TIMEOUT = env.int('CRYPTO_API_TIMEOUT', default=30)
+MAX_WITHDRAWALS_PER_HOUR = env.int('MAX_WITHDRAWALS_PER_HOUR', default=5)
+MAX_WITHDRAWALS_TO_ADDRESS = env.int('MAX_WITHDRAWALS_TO_ADDRESS', default=3)
+MAX_ADDRESS_RISK_SCORE = env.float('MAX_ADDRESS_RISK_SCORE', default=0.7)
+from decimal import Decimal
+MAX_TRANSACTION_AMOUNT = Decimal(env('MAX_TRANSACTION_AMOUNT', default='10000.00'))
+BTC_MIN_CONFIRMATIONS = env.int('BTC_MIN_CONFIRMATIONS', default=3)
+XMR_MIN_CONFIRMATIONS = env.int('XMR_MIN_CONFIRMATIONS', default=10)
+WITHDRAWAL_CONFIRMATION_BLOCKS = env.int('WITHDRAWAL_CONFIRMATION_BLOCKS', default=6)
+
+# Node Configuration
+BTC_NODE_URL = env('BTC_NODE_URL', default='http://localhost:8332')
+BTC_RPC_USER = env('BTC_RPC_USER', default='btcuser')
+BTC_RPC_PASSWORD = env('BTC_RPC_PASSWORD', default='btcpass')
+
+XMR_NODE_URL = env('XMR_NODE_URL', default='http://localhost:18081')
+XMR_RPC_PORT = env('XMR_RPC_PORT', default='18081')
+
+# Delivery Tracking Settings
+MAPBOX_TOKEN = env('MAPBOX_TOKEN', default=None)
+TRACKING_UPDATE_INTERVAL = env.int('TRACKING_UPDATE_INTERVAL', default=30)  # seconds
+TRACKING_RATE_LIMIT = env.int('TRACKING_RATE_LIMIT', default=60)  # requests per minute

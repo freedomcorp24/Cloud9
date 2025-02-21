@@ -1,0 +1,82 @@
+{% extends "oscar/dashboard/layout.html" %}
+
+{% block title %}
+    Vendor Bond Payment | {{ block.super }}
+{% endblock %}
+
+{% block breadcrumbs %}
+    <ul class="breadcrumb">
+        <li>
+            <a href="{% url 'dashboard:index' %}">Dashboard</a>
+        </li>
+        <li class="active">Vendor Bond Payment</li>
+    </ul>
+{% endblock %}
+
+{% block header %}
+    <div class="page-header">
+        <h1>Vendor Bond Payment</h1>
+    </div>
+{% endblock %}
+
+{% block dashboard_content %}
+    <div class="row">
+        <div class="col-md-8">
+            <div class="well">
+                <h3>€500 Vendor Bond Requirement</h3>
+                <p>
+                    To access vendor features and list products on Cloud 9 Marketplace,
+                    you must pay a €500 vendor bond. This bond helps ensure marketplace
+                    quality and security.
+                </p>
+                <p>
+                    If you are unable to pay the bond, you may 
+                    <a href="{% url 'support:bond_waiver_request' %}">request a waiver</a>
+                    from our support team.
+                </p>
+            </div>
+
+            <form method="post" class="form-horizontal">
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Bond Amount</label>
+                    <div class="col-sm-9">
+                        <p class="form-control-static">€500.00</p>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="col-sm-offset-3 col-sm-9">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            Pay €500 Bond Now
+                        </button>
+                        <a href="{% url 'support:bond_waiver_request' %}" class="btn btn-default btn-lg">
+                            Request Waiver
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="col-md-4">
+            <div class="panel panel-info">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Why Pay a Bond?</h3>
+                </div>
+                <div class="panel-body">
+                    <ul>
+                        <li>Ensures vendor commitment</li>
+                        <li>Protects buyers</li>
+                        <li>Maintains marketplace quality</li>
+                        <li>Reduces fraud risk</li>
+                    </ul>
+                    <p>
+                        The bond is refundable if you decide to stop selling
+                        and have no outstanding disputes or issues.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

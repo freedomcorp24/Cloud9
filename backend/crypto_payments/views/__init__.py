@@ -1,19 +1,16 @@
+from django.shortcuts import render, get_object_or_404
 from .admin import (
-    PaymentDashboardView,
-    BatchDetailView,
-    UserPaymentHistoryView,
-    AdminActionLogView
-)
-from .deposit import (
-    DepositAddressCreateView,
-    DepositAddressDetailView
+    payment_dashboard,
+    batch_detail,
+    user_payment_history,
+    admin_action_log,
+    deposit_address
 )
 
 __all__ = [
-    "PaymentDashboardView",
-    "BatchDetailView",
-    "UserPaymentHistoryView",
-    "AdminActionLogView",
-    "DepositAddressCreateView",
-    "DepositAddressDetailView"
+    "payment_dashboard",
+    "batch_detail",
+    "user_payment_history",
+    "admin_action_log",
+    "deposit_address"
 ]

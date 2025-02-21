@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="support-dashboard">
+    <h1>Support Dashboard</h1>
+    
+    <div class="actions">
+        <a href="{% url 'support:ticket_create' %}" class="btn btn-primary">
+            Open New Ticket
+        </a>
+        {% if not user.vendor_profile.bond_paid and not user.vendor_profile.bond_waived %}
+        <a href="{% url 'support:bond_waiver_request' %}" class="btn btn-secondary">
+            Request Bond Waiver
+        </a>
+        {% endif %}
+    </div>
+    
+    <div class="ticket-sections">
+        <section id="open-tickets">
+            <h2>Open Tickets</h2>
+            {% if open_tickets %}
+                {% include "support/partials/ticket_list.html" with tickets=open_tickets %}
+            {% else %}
+                <p>No open tickets</p>
+            {% endif %}
+        </section>
+        
+        <section id="closed-tickets">
+            <h2>Closed Tickets</h2>
+            {% if closed_tickets %}
+                {% include "support/partials/ticket_list.html" with tickets=closed_tickets %}
+            {% else %}
+                <p>No closed tickets</p>
+            {% endif %}
+        </section>
+    </div>
+</div>
+{% endblock %}

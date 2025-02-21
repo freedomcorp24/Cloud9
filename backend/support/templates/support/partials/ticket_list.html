@@ -1,0 +1,30 @@
+<div class="ticket-list">
+    {% for ticket in tickets %}
+    <div class="ticket-card {% if ticket.status == 'urgent' %}urgent{% endif %}">
+        <div class="ticket-header">
+            <h3>
+                <a href="{% url 'support:ticket_detail' ticket.pk %}">
+                    {{ ticket.subject }}
+                </a>
+            </h3>
+            <span class="ticket-status {{ ticket.status }}">
+                {{ ticket.get_status_display }}
+            </span>
+        </div>
+        
+        <div class="ticket-meta">
+            <span class="category">{{ ticket.category.name }}</span>
+            <span class="created">{{ ticket.created_at|timesince }} ago</span>
+            {% if ticket.assigned_to %}
+            <span class="assigned">
+                Assigned to: {{ ticket.assigned_to.get_full_name|default:ticket.assigned_to.username }}
+            </span>
+            {% endif %}
+        </div>
+        
+        <div class="ticket-preview">
+            {{ ticket.description|truncatewords:30 }}
+        </div>
+    </div>
+    {% endfor %}
+</div>

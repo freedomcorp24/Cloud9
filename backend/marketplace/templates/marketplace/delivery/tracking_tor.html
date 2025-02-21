@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block content %}
+<div class="tracking-container">
+    <div class="alert alert-info" role="alert">
+        <h4 class="alert-heading">{% trans "Delivery Tracking" %}</h4>
+        <p>{% trans "Order" %} #{{ order.id }} - {{ order.product.name }}</p>
+    </div>
+
+    <div class="tracking-controls">
+        <form method="post" action="{% url 'marketplace:tor-delivery-status' order.id %}">
+            {% csrf_token %}
+            <button type="submit" name="status" value="on_way" class="btn btn-primary">{% trans "Mark as On Way" %}</button>
+            <button type="submit" name="status" value="close" class="btn btn-warning">{% trans "Mark as Close" %}</button>
+            <button type="submit" name="status" value="arrived" class="btn btn-success">{% trans "Mark as Arrived" %}</button>
+        </form>
+
+        <div class="location-info">
+            <h5>{% trans "Current Status" %}</h5>
+            <p>{{ order.get_status_display }}</p>
+            {% if order.last_updated %}
+                <small class="text-muted">{% trans "Last updated" %}: {{ order.last_updated|date:"Y-m-d H:i:s" }}</small>
+            {% endif %}
+        </div>
+
+        {% if order.estimated_arrival %}
+        <div class="delivery-info">
+            <h5>{% trans "Estimated Arrival" %}</h5>
+            <p>{{ order.estimated_arrival|date:"Y-m-d H:i:s" }}</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.tracking-container { max-width: 800px; margin: 0 auto; padding: 20px; }
+.tracking-controls { background: #fff; padding: 20px; border-radius: 8px; }
+.btn { margin: 5px; }
+.location-info { margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 4px; }
+</style>
+{% endblock %}
