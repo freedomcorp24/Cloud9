@@ -1,4 +1,7 @@
-from django.http import HttpResponseToo_Many_Requests
+from django.http import HttpResponse
+
+class HttpResponseTooManyRequests(HttpResponse):
+    status_code = 429
 from django.core.cache import cache
 from django.conf import settings
 import time
@@ -20,7 +23,7 @@ class TorAccessMiddleware:
         if is_tor:
             # Apply stricter rate limiting for Tor requests
             if not self._check_rate_limit(request):
-                return HttpResponseToo_Many_Requests("Rate limit exceeded")
+                return HttpResponseTooManyRequests("Rate limit exceeded")
 
         response = self.get_response(request)
         return response
