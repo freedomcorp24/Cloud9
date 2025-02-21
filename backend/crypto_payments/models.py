@@ -38,7 +38,7 @@ class CryptoWallet(models.Model):
     def __str__(self):
         return f"{self.user}'s {self.currency} Wallet ({self.address})"
 
-class CryptoTransaction(AbstractTransaction):
+class CryptoTransaction(models.Model):
     """
     Cryptocurrency transaction with confirmation tracking
     """
@@ -68,6 +68,29 @@ class CryptoTransaction(AbstractTransaction):
     memo = models.CharField(max_length=200, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        app_label = 'crypto_payments'
+        verbose_name = _('Crypto Transaction')
+        verbose_name_plural = _('Crypto Transactions')
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.transaction_type} - {self.tx_hash} ({self.status})"
+
+    @property
+    def is_confirmed(self):
+        return self.confirmations >= self.required_confirmations
+
+    class Meta:
+        verbose_name = _('Crypto Transaction')
+        verbose_name_plural = _('Crypto Transactions')
+        ordering = ['-created_at']
+        abstract = False
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._meta.get_field('source').remote_field.related_name = 'crypto_transactions'
     
     class Meta:
         verbose_name = _('Crypto Transaction')

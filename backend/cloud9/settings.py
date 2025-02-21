@@ -27,8 +27,9 @@ ALLOWED_HOSTS = []
 
 
 # Application definition
+from oscar.defaults import *
+
 INSTALLED_APPS = [
-    # Django apps
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -37,8 +38,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.sites',
     'django.contrib.flatpages',
-    
+
     # Oscar apps
+    'oscar.config.Shop',
     'oscar.apps.analytics.apps.AnalyticsConfig',
     'oscar.apps.checkout.apps.CheckoutConfig',
     'oscar.apps.address.apps.AddressConfig',
@@ -68,7 +70,7 @@ INSTALLED_APPS = [
     'oscar.apps.dashboard.vouchers.apps.VouchersDashboardConfig',
     'oscar.apps.dashboard.communications.apps.CommunicationsDashboardConfig',
     'oscar.apps.dashboard.shipping.apps.ShippingDashboardConfig',
-    
+
     # Third party
     'widget_tweaks',
     'haystack',
@@ -205,15 +207,12 @@ OSCAR_DEFAULT_CURRENCY = 'USD'
 OSCAR_ALLOW_ANON_CHECKOUT = False
 OSCAR_REQUIRED_ADDRESS_FIELDS = ['first_name', 'last_name', 'line1', 'city', 'country']
 
-# Search settings
+# Search settings - Temporarily disabled for initial setup
 HAYSTACK_CONNECTIONS = {
     'default': {
-        'ENGINE': 'haystack.backends.elasticsearch7_backend.Elasticsearch7SearchEngine',
-        'URL': env('ELASTICSEARCH_URL', default='http://localhost:9200/'),
-        'INDEX_NAME': 'cloud9',
+        'ENGINE': 'haystack.backends.simple_backend.SimpleEngine',
     },
 }
-HAYSTACK_SIGNAL_PROCESSOR = 'haystack.signals.RealtimeSignalProcessor'
 
 # Cache settings
 CACHES = {

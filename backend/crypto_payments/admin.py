@@ -10,10 +10,9 @@ class CryptoWalletAdmin(admin.ModelAdmin):
 
 @admin.register(CryptoTransaction)
 class CryptoTransactionAdmin(admin.ModelAdmin):
-    list_display = ('tx_hash', 'wallet', 'transaction_type', 'amount_crypto', 'status', 'confirmations', 'created_at')
-    list_filter = ('status', 'transaction_type', 'created_at')
+    list_display = ('tx_hash', 'wallet', 'transaction_type', 'amount_crypto', 'status', 'confirmations')
+    list_filter = ('status', 'transaction_type')
     search_fields = ('tx_hash', 'wallet__address', 'wallet__user__username')
-    readonly_fields = ('created_at', 'updated_at')
 
 @admin.register(TransactionConfirmation)
 class TransactionConfirmationAdmin(admin.ModelAdmin):
