@@ -9,10 +9,21 @@ app = FastAPI(
     title=settings.PROJECT_NAME,
     description="Cloud 9 THC/CBD Marketplace API",
     version="0.1.0",
+    root_path="",
+    docs_url=None,
+    redoc_url=None,
+    openapi_url=None
+)
+
+# Mount API documentation under /api prefix
+app.mount("/api", FastAPI(
+    title=f"{settings.PROJECT_NAME} - API Documentation",
+    description="Cloud 9 THC/CBD Marketplace API Documentation",
+    version="0.1.0",
     docs_url="/docs",
     redoc_url="/redoc",
     openapi_url="/openapi.json"
-)
+))
 
 # Disable CORS. Do not remove this for full-stack development.
 app.add_middleware(
@@ -23,29 +34,21 @@ app.add_middleware(
     allow_headers=["*"],  # Allows all headers
 )
 
-# Root route serves HTML with links
-@app.get("/", response_class=HTMLResponse)
+# Root route returns API status
+@app.get("/")
 async def root():
-    return """
-    <html>
-        <head>
-            <title>Cloud 9 API</title>
-            <style>
-                body { font-family: Arial, sans-serif; margin: 40px; }
-                a { display: block; margin: 10px 0; }
-            </style>
-        </head>
-        <body>
-            <h1>Cloud 9 API</h1>
-            <a href="/docs">API Documentation (Swagger UI)</a>
-            <a href="/redoc">Alternative Documentation (ReDoc)</a>
-            <a href="/openapi.json">OpenAPI Schema</a>
-            <a href="/api/v1/auth">Authentication Endpoints</a>
-            <a href="/api/v1/products">Product Endpoints</a>
-            <a href="/healthz">Health Check</a>
-        </body>
-    </html>
-    """
+    return {
+        "name": settings.PROJECT_NAME,
+        "version": "0.1.0",
+        "status": "running",
+        "endpoints": {
+            "docs": "/api/docs",
+            "redoc": "/api/redoc",
+            "openapi": "/api/openapi.json",
+            "api": "/api/v1",
+            "health": "/healthz"
+        }
+    }
 
 # Include API router
 app.include_router(api_router, prefix="/api/v1")
