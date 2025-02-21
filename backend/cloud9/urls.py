@@ -15,8 +15,15 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
+from django.apps import apps
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-]
+    path('', include(apps.get_app_config('oscar').urls[0])),
+    path('marketplace/', include('marketplace.urls')),
+    path('crypto-payments/', include('crypto_payments.urls')),
+    path('tor-access/', include('tor_access.urls')),
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
