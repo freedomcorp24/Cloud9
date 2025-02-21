@@ -1,0 +1,64 @@
+{% extends "oscar/layout.html" %}
+{% load static %}
+
+{% block title %}
+My Products | {{ block.super }}
+{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>My Products</h1>
+                <a href="{% url 'marketplace:vendor_product_add' %}" class="btn btn-primary">Add New Product</a>
+            </div>
+
+            {% if products %}
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Price</th>
+                            <th>Stock</th>
+                            <th>Delivery Options</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for product in products %}
+                        <tr>
+                            <td>{{ product.product.title }}</td>
+                            <td>${{ product.price }}</td>
+                            <td>{{ product.stock }}</td>
+                            <td class="delivery-options">
+                                <div class="d-flex gap-1">
+                                    {% if product.instant_delivery %}
+                                        <span class="badge bg-success">Instant</span>
+                                    {% endif %}
+                                    {% if product.delivery_fee > 0 %}
+                                        <span class="badge bg-info">Delivery</span>
+                                    {% endif %}
+                                    {% if product.shipping_fee > 0 %}
+                                        <span class="badge bg-warning">Shipping</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td>
+                                <a href="{% url 'marketplace:vendor_product_edit' product.pk %}" class="btn btn-sm btn-outline-primary">Edit</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                You haven't added any products yet. <a href="{% url 'marketplace:vendor_product_add' %}">Add your first product</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

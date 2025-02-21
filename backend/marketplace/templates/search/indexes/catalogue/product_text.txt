@@ -1,0 +1,5 @@
+{{ object.title }}
+{{ object.description }}
+{{ object.product_class.name }}
+{% for category in object.categories.all %}{{ category.name }} {% endfor %}
+{% for attribute in object.attribute_values.all %}{{ attribute.value }} {% endfor %}
