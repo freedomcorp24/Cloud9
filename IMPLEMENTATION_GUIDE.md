@@ -2,6 +2,15 @@
 
 ## System Architecture
 
+### Framework
+The marketplace is built using Django Oscar, a domain-driven e-commerce framework that provides:
+- Customizable product catalog with advanced search capabilities
+- Secure checkout process with cryptocurrency support
+- Extensible vendor dashboard and management
+- Comprehensive order tracking and delivery system
+- Built-in analytics and reporting
+- Multi-platform support (Tor, clearnet, mobile)
+
 ### Database Architecture
 The system uses multiple databases for optimal performance and scalability:
 

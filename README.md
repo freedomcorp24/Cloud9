@@ -1,32 +1,55 @@
 # Cloud 9 Marketplace
 
-A comprehensive THC/CBD marketplace platform supporting Tor, clearnet, and mobile platforms.
+A comprehensive THC/CBD marketplace platform built with Django Oscar, supporting Tor, clearnet, and mobile platforms.
 
 ## Features
 - Multi-platform support (Tor, clearnet, Android app)
-- Cryptocurrency payments (BTC, XMR, USDT)
+- Cryptocurrency payments (BTC, XMR, USDT) with full node integration
 - Multiple delivery methods (instant, mail, pickup)
-- Advanced search functionality
-- Vendor management system
+- Advanced search functionality with Elasticsearch
+- Vendor management system with bond requirements
 - Secure authentication with PGP support
+- Market-controlled cryptocurrency wallets
+- Secure withdrawal system with multi-level validation
 
 ## Backend Setup
 1. Install dependencies:
 ```bash
 cd backend
-poetry install
+pip install -r requirements.txt
 ```
 
-2. Set up environment variables in `.env`:
-```
-MAIN_DATABASE_URL=postgresql+asyncpg://user:pass@localhost/cloud9_main
-PAYMENT_DATABASE_URL=postgresql+asyncpg://user:pass@localhost/cloud9_payments
-ANALYTICS_DATABASE_URL=postgresql+asyncpg://user:pass@localhost/cloud9_analytics
-ELASTICSEARCH_URL=http://localhost:9200
-SECRET_KEY=your-secret-key
-```
-
-3. Run the development server:
+2. Configure environment:
 ```bash
-poetry run fastapi dev app/main.py
+# Copy example configuration
+cp .env.example .env
+
+# Configure environment variables following security guidelines
+# See docs/SECURITY_GUIDE.md for secure configuration practices
+# Important: Never commit credentials or secrets to version control
 ```
+
+3. Run migrations:
+```bash
+python manage.py migrate
+```
+
+4. Create a superuser:
+```bash
+python manage.py createsuperuser
+```
+
+5. Run the development server:
+```bash
+python manage.py runserver
+```
+
+## Security Note
+Ensure all credentials and sensitive configuration values are properly secured and never committed to version control. See the [Security Guide](docs/SECURITY_GUIDE.md) for best practices.
+
+## Documentation
+- [Implementation Guide](IMPLEMENTATION_GUIDE.md)
+- [Infrastructure Guide](docs/INFRASTRUCTURE_GUIDE.md)
+- [Payment Implementation](docs/PAYMENT_IMPLEMENTATION_GUIDE.md)
+- [Authentication Guide](docs/AUTH_IMPLEMENTATION_GUIDE.md)
+- [Database Setup](docs/DATABASE_SETUP_GUIDE.md)
