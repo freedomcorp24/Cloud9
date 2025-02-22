@@ -6,6 +6,7 @@ from .wallet import UserWallet, WithdrawalAddress
 from .order_status import OrderStatus
 from .timeframe import OrderTimeframe
 from .live_tracking import LiveDeliveryTracking, DeliveryLocation
+from .postage import PostageOption
 
 __all__ = [
     'DeliveryOrder',
@@ -22,5 +23,6 @@ __all__ = [
     'WithdrawalAddress',
     'OrderStatus',
     'LiveDeliveryTracking',
-    'DeliveryLocation'
+    'DeliveryLocation',
+    'PostageOption'
 ]
