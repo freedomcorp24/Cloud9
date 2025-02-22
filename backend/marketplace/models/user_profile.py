@@ -235,3 +235,67 @@ class UserProfile(models.Model):
             return encrypted_message
             
         return None
+        
+    def freeze_account(self, admin_user, reason):
+        """Freeze user account"""
+        self.status = 'frozen'
+        self.status_reason = reason
+        self.frozen_by = admin_user
+        self.frozen_at = timezone.now()
+        self.save()
+        
+    def unfreeze_account(self):
+        """Unfreeze user account"""
+        self.status = 'active'
+        self.status_reason = ''
+        self.frozen_by = None
+        self.frozen_at = None
+        self.save()
+        
+    def suspend_account(self, reason):
+        """Suspend user account"""
+        self.status = 'suspended'
+        self.status_reason = reason
+        self.save()
+        
+    def ban_account(self, reason):
+        """Ban user account"""
+        self.status = 'banned'
+        self.status_reason = reason
+        self.save()
+        
+    def track_transaction(self, amount):
+        """Track transaction for suspicious activity monitoring"""
+        now = timezone.now()
+        if (now - self.last_transaction_reset) > timedelta(hours=24):
+            self.daily_transaction_count = 0
+            self.daily_transaction_volume = 0
+            self.last_transaction_reset = now
+            
+        self.daily_transaction_count += 1
+        self.daily_transaction_volume += amount
+        self.save()
+        
+    def check_suspicious_activity(self):
+        """Check for suspicious activity based on transaction patterns"""
+        from django.conf import settings
+        
+        suspicious = False
+        reasons = []
+        
+        # Check transaction count
+        if self.daily_transaction_count >= settings.SUSPICIOUS_ORDER_COUNT:
+            suspicious = True
+            reasons.append(f'High transaction count: {self.daily_transaction_count}')
+            
+        # Check transaction volume
+        if self.daily_transaction_volume >= settings.SUSPICIOUS_AMOUNT_THRESHOLD:
+            suspicious = True
+            reasons.append(f'High transaction volume: {self.daily_transaction_volume}')
+            
+        return {
+            'suspicious': suspicious,
+            'reasons': reasons,
+            'count': self.daily_transaction_count,
+            'volume': self.daily_transaction_volume
+        }
