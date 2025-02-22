@@ -16,9 +16,9 @@
         <div class="form-group">
             <label>{% trans "Display Currency" %}</label>
             <select name="display_currency" class="form-control">
-                {% for code in currency_choices %}
+                {% for code, name in currency_choices %}
                 <option value="{{ code }}" {% if code == object.display_currency %}selected{% endif %}>
-                    {{ code }}
+                    {{ name }}
                 </option>
                 {% endfor %}
             </select>
@@ -66,9 +66,11 @@
     </form>
 </div>
 
-{% block extrastyles %}
+{% endblock %}
+
+{% block styles %}
 {{ block.super }}
-<style>
+<style type="text/css">
 .profile-preferences {
     max-width: 600px;
     margin: 0 auto;
@@ -87,5 +89,4 @@
     display: block;
 }
 </style>
-{% endblock %}
 {% endblock %}
