@@ -2,10 +2,11 @@ from django import template
 
 register = template.Library()
 
-@register.inclusion_tag('cart/quantity_options.html')
+@register.filter
 def quantity_options(current_quantity):
-    """Generate quantity options from 1 to 100"""
-    return {
-        'options': range(1, 101),
-        'current_quantity': current_quantity
-    }
+    """Generate HTML for quantity options from 1 to 100"""
+    options = []
+    for i in range(1, 101):
+        selected = ' selected' if i == current_quantity else ''
+        options.append(f'<option value="{i}"{selected}>{i}</option>')
+    return '\n'.join(options)

@@ -33,7 +33,7 @@
                                 {% csrf_token %}
                                 <select name="quantity">
                                     {% load cart_tags %}
-                                    {% quantity_options item.quantity %}
+                                    {{ item.quantity|quantity_options|safe }}
                                 </select>
                                 <button type="submit">{% trans "Update" %}</button>
                             </form>
