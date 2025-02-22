@@ -3,7 +3,9 @@ from django.conf import settings
 from django.core.validators import MinValueValidator
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
+from django.db import transaction
 from datetime import timedelta
+from decimal import Decimal
 from .cart import Cart
 from .order import DeliveryOrder
 
@@ -81,12 +83,10 @@ class CheckoutSession(models.Model):
         if not self.delivery_type or not self.completion_window:
             return False
             
-        if self.delivery_type == 'mail':
-            return self.completion_window >= DeliveryOrder.MAIL_PICKUP_MIN_DAYS
-        elif self.delivery_type == 'pickup':
+        if self.delivery_type in ['mail', 'pickup']:
             return self.completion_window >= DeliveryOrder.MAIL_PICKUP_MIN_DAYS
         elif self.delivery_type == 'instant':
-            return self.completion_window <= 1  # Max 24 hours
+            return self.completion_window <= 1  # Max 24 hours for instant delivery
             
         return False
         

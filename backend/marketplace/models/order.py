@@ -11,6 +11,10 @@ class DeliveryOrder(AbstractOrder):
     """
     Order model for tracking deliveries, inheriting from Oscar's AbstractOrder
     """
+    # Order completion timeframe constants
+    MAIL_PICKUP_MIN_DAYS = 7  # Minimum days for mail/pickup orders
+    INSTANT_DELIVERY_MAX_HOURS = 24  # Maximum hours for instant delivery
+    
     date_placed = models.DateTimeField(auto_now_add=True)
     number = models.CharField(max_length=128, unique=True)
     total_excl_tax = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
