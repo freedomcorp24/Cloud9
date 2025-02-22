@@ -6,9 +6,9 @@ from decimal import Decimal
 class UserWallet(models.Model):
     """Model for user cryptocurrency wallets"""
     user = models.OneToOneField(
-        'UserProfile',
+        'auth.User',
         on_delete=models.CASCADE,
-        related_name='wallet'
+        related_name='crypto_wallet'
     )
     btc_balance = models.DecimalField(
         max_digits=18,
@@ -83,4 +83,4 @@ class WithdrawalAddress(models.Model):
         unique_together = ['wallet', 'currency', 'address']
         
     def __str__(self):
-        return f"{self.get_currency_display()} address for {self.wallet.user}"
+        return f"{dict(self.CURRENCY_CHOICES).get(self.currency)} address for {self.wallet.user}"

@@ -7,15 +7,10 @@ class UserProfile(models.Model):
     """
     User profile model for marketplace
     """
-    class Meta:
-        app_label = 'marketplace'
-        verbose_name = _('User Profile')
-        verbose_name_plural = _('User Profiles')
-        
     user = models.OneToOneField(
-        AbstractUser,
+        settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='profile'
+        related_name='user_profile'
     )
     preferred_currency = models.CharField(
         max_length=4,  # Increased to accommodate 4-char currencies like 'USDT'

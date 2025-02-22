@@ -69,9 +69,6 @@ class ProductListing(AbstractProduct):
     # Bulk Pricing (Optional)
     bulk_pricing = models.JSONField(null=True, blank=True)
     
-    class Meta:
-        app_label = 'marketplace'
-    
     # Images
     main_image = models.ImageField(upload_to='product_images/')
     image_2 = models.ImageField(upload_to='product_images/', null=True, blank=True)
@@ -84,14 +81,7 @@ class ProductListing(AbstractProduct):
     ships_to = models.CharField(max_length=500)  # Comma-separated countries
     
     # Postage Options (1-5)
-    class PostageOption(models.Model):
-        product = models.ForeignKey('ProductListing', on_delete=models.CASCADE)
-        name = models.CharField(max_length=100)
-        price = models.DecimalField(max_digits=10, decimal_places=2)
-        
-        class Meta:
-            verbose_name = _('Postage Option')
-            verbose_name_plural = _('Postage Options')
+    postage_options = models.ManyToManyField('PostageOption', related_name='products')
     
     # Search Options
     VISIBILITY_CHOICES = [
@@ -120,7 +110,8 @@ class ProductListing(AbstractProduct):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
-    class Meta:
+    class Meta(AbstractProduct.Meta):
+        app_label = 'marketplace'
         verbose_name = _('Product Listing')
         verbose_name_plural = _('Product Listings')
         ordering = ['-created_at']

@@ -5,25 +5,34 @@ from django.utils.translation import gettext_lazy as _
 from oscar.apps.order.abstract_models import AbstractOrder
 from .vendor import VendorProfile, VendorProduct
 from .order_status import OrderStatus
+from decimal import Decimal
 
 class DeliveryOrder(AbstractOrder):
     """
     Order model for tracking deliveries, inheriting from Oscar's AbstractOrder
     """
+    date_placed = models.DateTimeField(auto_now_add=True)
+    number = models.CharField(max_length=128, unique=True)
+    total_excl_tax = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
+    total_incl_tax = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
     DELIVERY_TYPES = [
         ('instant', 'Instant Delivery'),
         ('mail', 'Mail Delivery'),
         ('pickup', 'Pickup')
     ]
     
-    class Meta:
+    class Meta(AbstractOrder.Meta):
         app_label = 'marketplace'
+        verbose_name = _('Delivery Order')
+        verbose_name_plural = _('Delivery Orders')
+        ordering = ['-created_at']
     
     # Status is now tracked through OrderStatus model
     
     # Inheriting core fields from AbstractOrder
     vendor = models.ForeignKey(VendorProfile, on_delete=models.CASCADE)
     product = models.ForeignKey(VendorProduct, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='marketplace_orders')
     quantity = models.IntegerField(
         validators=[
             MinValueValidator(1),
@@ -58,10 +67,7 @@ class DeliveryOrder(AbstractOrder):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
-    class Meta:
-        verbose_name = _('Delivery Order')
-        verbose_name_plural = _('Delivery Orders')
-        ordering = ['-created_at']
+
     
     def __str__(self):
         return f"Order {self.id} - {self.delivery_type} ({self.status})"
@@ -70,8 +76,6 @@ class OrderDispute(models.Model):
     """
     Model for handling order disputes
     """
-    class Meta:
-        app_label = 'marketplace'
     DISPUTE_TYPES = [
         ('quality', 'Product Quality'),
         ('delivery', 'Delivery Issues'),
@@ -106,8 +110,6 @@ class DeliveryTracking(models.Model):
     """
     Real-time tracking for deliveries
     """
-    class Meta:
-        app_label = 'marketplace'
     order = models.ForeignKey(DeliveryOrder, on_delete=models.CASCADE)
     latitude = models.DecimalField(
         max_digits=9,
