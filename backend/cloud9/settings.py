@@ -189,13 +189,41 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
 
+from django.utils.translation import gettext_lazy as _
+
+# Language settings
+LANGUAGES = [
+    ('en', _('English')),
+    ('es', _('Spanish')),
+    ('fr', _('French')),
+    ('de', _('German')),
+    ('it', _('Italian')),
+    ('pt', _('Portuguese')),
+    ('ru', _('Russian')),
+    ('zh-hans', _('Simplified Chinese')),
+    ('ja', _('Japanese')),
+    ('ko', _('Korean')),
+    ('ar', _('Arabic')),
+    ('hi', _('Hindi')),
+    ('tr', _('Turkish')),
+    ('vi', _('Vietnamese')),
+    ('th', _('Thai')),
+]
+
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'UTC'
-
 USE_I18N = True
-
 USE_TZ = True
+
+LOCALE_PATHS = [
+    os.path.join(BASE_DIR, 'locale'),
+]
+
+LANGUAGE_COOKIE_NAME = 'cloud9_language'
+LANGUAGE_COOKIE_AGE = 365 * 24 * 60 * 60  # 1 year
+LANGUAGE_COOKIE_SECURE = True
+LANGUAGE_COOKIE_HTTPONLY = True
+LANGUAGE_COOKIE_SAMESITE = 'Strict'
 
 
 # Static files (CSS, JavaScript, Images)
