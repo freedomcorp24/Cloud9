@@ -1,6 +1,7 @@
 {% extends "oscar/customer/profile/base.html" %}
 {% load i18n %}
 {% load currency_display %}
+{% load profile_tags %}
 {% load static %}
 
 {% block tabcontent %}
@@ -14,7 +15,8 @@
             <label class="control-label col-sm-3">{% trans "Display Currency" %}</label>
             <div class="col-sm-9">
                 <select name="display_currency" class="form-control">
-                    {% for code, name in SUPPORTED_CURRENCIES %}
+                    {% get_currencies as currencies %}
+                    {% for code, name in currencies %}
                         <option value="{{ code }}"{% if code == user.user_profile.preferred_currency %} selected{% endif %}>{{ name }}</option>
                     {% endfor %}
                 </select>
@@ -28,7 +30,8 @@
             <label class="control-label col-sm-3">{% trans "Language" %}</label>
             <div class="col-sm-9">
                 <select name="language" class="form-control">
-                    {% for code, name in LANGUAGES %}
+                    {% get_available_languages as languages %}
+                    {% for code, name in languages %}
                         <option value="{{ code }}"{% if code == user.user_profile.language %} selected{% endif %}>{{ name }}</option>
                     {% endfor %}
                 </select>
