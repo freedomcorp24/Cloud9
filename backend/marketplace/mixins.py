@@ -3,27 +3,28 @@ from django.core.exceptions import PermissionDenied
 from django.contrib import messages
 from django.shortcuts import redirect
 from django.urls import reverse
+from django.views.generic.base import ContextMixin
+from typing import Optional, Any
+from django.http import HttpRequest, HttpResponse
 
-class CategoryPermissionMixin(UserPassesTestMixin):
+class CategoryPermissionMixin(UserPassesTestMixin, ContextMixin):
     """Ensures only master admin can manage categories."""
     
-    def test_func(self):
+    request: HttpRequest
+    object: Optional[Any] = None
+    
+    def test_func(self) -> bool:
         """Check if user is a superuser (master admin)."""
-        # UserPassesTestMixin provides self.request
-        if not hasattr(self, 'request'):
-            return False
         return self.request.user.is_superuser
     
-    def handle_no_permission(self):
+    def handle_no_permission(self) -> HttpResponse:
         """Handle unauthorized access attempts."""
-        if hasattr(self, 'request'):
-            messages.error(self.request, "Only master admin can manage categories.")
-            return redirect(reverse('dashboard:catalogue-category-list'))
-        return super().handle_no_permission()
+        messages.error(self.request, "Only master admin can manage categories.")
+        return redirect(reverse('dashboard:catalogue-category-list'))
 
-    def dispatch(self, request, *args, **kwargs):
+    def dispatch(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
         """Add user to instance for audit logging."""
         response = super().dispatch(request, *args, **kwargs)
-        if hasattr(self, 'object') and self.object is not None:
+        if self.object is not None:
             setattr(self.object, '_current_user', request.user)
         return response
