@@ -1,6 +1,21 @@
-{% extends "tor/base.html" %}
+{% extends "oscar/base.html" %}
+{% load i18n %}
+{% load currency_filters %}
+{% load purchase_info_tags %}
+{% load static %}
 
-{% block title %}Products - Cloud 9 Marketplace{% endblock %}
+{% block title %}
+    {% trans "Products" %} | {{ block.super }}
+{% endblock %}
+
+{% block breadcrumbs %}
+    <ul class="breadcrumb">
+        <li>
+            <a href="{% url 'catalogue:index' %}">{% trans "Home" %}</a>
+        </li>
+        <li class="active">{% trans "Products" %}</li>
+    </ul>
+{% endblock %}
 
 {% block content %}
 <div class="product-grid">
@@ -12,7 +27,8 @@
             <select name="category" id="category">
                 <option value="">All Categories</option>
                 {% for category in categories %}
-                    <option value="{{ category.id }}" {% if selected_category == category.id %}selected{% endif %}>
+                    <option value="{{ category.id }}"
+                            {% if selected_category %}selected{% endif %}>
                         {{ category.name }}
                     </option>
                 {% endfor %}
@@ -35,36 +51,51 @@
             <h3>{{ product.title }}</h3>
             <p>{{ product.description|truncatewords:30 }}</p>
             <div class="product-details">
-                <p>Price: {{ product.price }} {{ product.currency }}</p>
-                <p>Vendor: {{ product.vendor.name }}</p>
-                <p>Rating: {{ product.rating }}/5 ({{ product.review_count }} reviews)</p>
-                {% if product.stock_level > 0 %}
-                    <p>In Stock ({{ product.stock_level }} available)</p>
-                {% else %}
-                    <p>Out of Stock</p>
-                {% endif %}
+                {% with stockrecord=product.stockrecords.first %}
+                    <p>Price: {{ stockrecord.price_excl_tax|default:"N/A" }} {{ stockrecord.price_currency|default:"USD" }}</p>
+                    <p>Vendor: {{ stockrecord.partner.name }}</p>
+                    {% if product.rating %}
+                        <p>Rating: {{ product.rating }}/5 ({{ product.reviews.count }} reviews)</p>
+                    {% else %}
+                        <p>No ratings yet</p>
+                    {% endif %}
+                    {% with stock=product.stockrecords.first %}
+                        <p>
+                            {% if stock and stock.num_in_stock > 0 %}
+                                In Stock ({{ stock.num_in_stock }} available)
+                            {% else %}
+                                Out of Stock
+                            {% endif %}
+                        </p>
+                    {% endwith %}
+                {% endwith %}
             </div>
-            <form method="post" action="{% url 'add_to_cart' product.id %}">
+            {% with stock=product.stockrecords.first %}
+            <form method="post" action="{% url 'basket:add' product.id %}">
                 {% csrf_token %}
                 <div class="form-group">
                     <label for="quantity">Quantity:</label>
-                    <input type="number" name="quantity" id="quantity" value="1" min="1" max="{{ product.stock_level }}">
+                    <input type="number" name="quantity" id="quantity" value="1" min="1" 
+                           max="{{ stock.num_in_stock|default:'0' }}"
+                           {% if not stock or stock.num_in_stock <= 0 %}disabled{% endif %}>
                 </div>
                 <div class="form-group">
-                    <label for="postage">Shipping Option:</label>
-                    <select name="postage" id="postage" required>
-                        {% for option in product.postage_options.all %}
-                            <option value="{{ option.id }}">
-                                {{ option.name }} - {{ option.price }} {{ product.currency }}
-                                ({{ option.delivery_time }} days)
+                    <label for="shipping">Shipping Option:</label>
+                    <select name="shipping" id="shipping" required>
+                        {% for method in shipping_methods %}
+                            <option value="{{ method.code }}">
+                                {{ method.name }} - {{ method.charge_incl_tax }} 
+                                ({{ method.description }})
                             </option>
                         {% endfor %}
                     </select>
                 </div>
-                <button type="submit" class="btn" {% if not product.stock_level %}disabled{% endif %}>
+                <button type="submit" class="btn" 
+                        {% if not stock or stock.num_in_stock <= 0 %}disabled{% endif %}>
                     Add to Cart
                 </button>
             </form>
+            {% endwith %}
         </div>
     {% empty %}
         <p>No products found matching your criteria.</p>
