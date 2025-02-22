@@ -12,11 +12,8 @@
         <div class="form-group">
             <label class="control-label col-sm-3">{% trans "Display Currency" %}</label>
             <div class="col-sm-9">
-                <select name="display_currency" class="form-control">
-                {% for code, name in currency_choices %}
-                    <option value="{{ code }}"{% if code == object.display_currency %} selected{% endif %}>{{ name }}</option>
-                {% endfor %}
-                </select>
+                <select name="display_currency" class="form-control">{% for code, name in currency_choices %}
+                    <option value="{{ code }}"{% if code == object.display_currency %} selected{% endif %}>{{ name }}</option>{% endfor %}</select>
                 <span class="help-block crypto-notice">
                     {% trans "* Prices shown for reference only. Payments accepted in BTC, XMR, and USDT." %}
                 </span>
@@ -26,11 +23,8 @@
         <div class="form-group">
             <label class="control-label col-sm-3">{% trans "Language" %}</label>
             <div class="col-sm-9">
-                <select name="language" class="form-control">
-                {% for code, name in languages %}
-                    <option value="{{ code }}"{% if code == object.language %} selected{% endif %}>{{ name }}</option>
-                {% endfor %}
-                </select>
+                <select name="language" class="form-control">{% for code, name in languages %}
+                    <option value="{{ code }}"{% if code == object.language %} selected{% endif %}>{{ name }}</option>{% endfor %}</select>
                 <span class="help-block">
                     {% trans "Choose your preferred language for the interface" %}
                 </span>
