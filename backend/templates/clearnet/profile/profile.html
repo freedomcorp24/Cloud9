@@ -1,6 +1,7 @@
 {% extends "clearnet/base.html" %}
 {% load i18n %}
 {% load currency_display %}
+{% load profile_tags %}
 {% load static %}
 
 {% block title %}
@@ -77,9 +78,10 @@
                             <div class="mb-3">
                                 <label for="currency" class="form-label">{% trans "Display Currency" %}</label>
                                 <select class="form-select" id="currency" name="currency">
-                                    {% for currency in SUPPORTED_CURRENCIES %}
-                                        <option value="{{ currency.0 }}" {% if currency.0 == user.user_profile.preferred_currency %}selected{% endif %}>
-                                            {{ currency.1 }}
+                                    {% get_currencies as currencies %}
+                                    {% for code, name in currencies %}
+                                        <option value="{{ code }}"{% if code == user.user_profile.preferred_currency %} selected{% endif %}>
+                                            {{ name }}
                                         </option>
                                     {% endfor %}
                                 </select>
@@ -87,9 +89,10 @@
                             <div class="mb-3">
                                 <label for="language" class="form-label">{% trans "Language" %}</label>
                                 <select class="form-select" id="language" name="language">
-                                    {% for language in LANGUAGES %}
-                                        <option value="{{ language.0 }}" {% if language.0 == user.user_profile.language %}selected{% endif %}>
-                                            {{ language.1 }}
+                                    {% get_available_languages as languages %}
+                                    {% for code, name in languages %}
+                                        <option value="{{ code }}"{% if code == user.user_profile.language %} selected{% endif %}>
+                                            {{ name }}
                                         </option>
                                     {% endfor %}
                                 </select>
