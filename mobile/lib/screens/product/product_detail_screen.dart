@@ -2,20 +2,53 @@ import 'package:flutter/material.dart';
 import '../../models/product.dart';
 import '../../services/api_service.dart';
 import 'package:provider/provider.dart';
+import '../../providers/product_provider.dart';
 
-class ProductDetailScreen extends StatelessWidget {
-  final Product product;
+class ProductDetailScreen extends StatefulWidget {
+  final String productId;
 
-  const ProductDetailScreen({Key? key, required this.product}) : super(key: key);
+  const ProductDetailScreen({Key? key, required this.productId}) : super(key: key);
+
+  @override
+  _ProductDetailScreenState createState() => _ProductDetailScreenState();
+}
+
+class _ProductDetailScreenState extends State<ProductDetailScreen> {
+  late Future<Product?> _productFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _productFuture = Provider.of<ProductProvider>(context, listen: false)
+        .getProductDetails(widget.productId);
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(product.title),
+        title: Text('Product Details'),
       ),
-      body: SingleChildScrollView(
-        child: Column(
+      body: FutureBuilder<Product?>(
+        future: _productFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator());
+          }
+          
+          if (snapshot.hasError) {
+            return Center(
+              child: Text('Error loading product: ${snapshot.error}'),
+            );
+          }
+          
+          final product = snapshot.data;
+          if (product == null) {
+            return Center(child: Text('Product not found'));
+          }
+          
+          return SingleChildScrollView(
+            child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (product.images.isNotEmpty)
@@ -105,6 +138,8 @@ class ProductDetailScreen extends StatelessWidget {
             ),
           ],
         ),
+      ));
+        },
       ),
     );
   }
