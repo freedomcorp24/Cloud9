@@ -7,6 +7,10 @@ from .order_status import OrderStatus
 from .timeframe import OrderTimeframe
 from .live_tracking import LiveDeliveryTracking, DeliveryLocation
 from .postage import PostageOption
+from .product import ProductListing
+from .product_attributes import ProductAttributeValue
+from .product_category import ProductCategory
+from .product_recommendation import ProductRecommendation
 
 __all__ = [
     'DeliveryOrder',
@@ -24,5 +28,9 @@ __all__ = [
     'OrderStatus',
     'LiveDeliveryTracking',
     'DeliveryLocation',
-    'PostageOption'
+    'PostageOption',
+    'ProductListing',
+    'ProductAttributeValue',
+    'ProductCategory',
+    'ProductRecommendation'
 ]

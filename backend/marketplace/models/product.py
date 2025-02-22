@@ -6,9 +6,12 @@ from django.conf import settings
 from django.utils import timezone
 from django.contrib.auth import get_user_model
 from oscar.apps.catalogue.abstract_models import AbstractProduct
+from oscar.core.loading import get_model
 from .vendor_fe import VendorFEPermission
 from .listing import ListingStatus, ListingDeletion
 from .vendor import VendorProfile
+from .product_attributes import ProductAttributeValue
+from .product_category import ProductCategory
 
 User = get_user_model()
 
@@ -41,6 +44,41 @@ class ProductListing(AbstractProduct):
         default=False,
         help_text=_('Indicates if listing has any active orders')
     )
+    # Override product_class to fix reverse accessor clash
+    product_class = models.ForeignKey(
+        'catalogue.ProductClass',
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        verbose_name=_('Product type'),
+        related_name='marketplace_products'
+    )
+    
+    # Override categories to use our custom through model
+    categories = models.ManyToManyField(
+        'catalogue.Category',
+        through='ProductCategory',
+        verbose_name=_('Categories'),
+        related_name='marketplace_products'
+    )
+    
+    # Override attribute values
+    attributes = models.ManyToManyField(
+        'catalogue.ProductAttribute',
+        through='ProductAttributeValue',
+        verbose_name=_('Attributes'),
+        related_name='marketplace_products'
+    )
+    
+    # Product recommendations
+    recommended_products = models.ManyToManyField(
+        'self',
+        through='ProductRecommendation',
+        through_fields=('primary', 'recommendation'),
+        verbose_name=_('Recommended Products'),
+        blank=True
+    )
+    
     # General Information
     vendor = models.ForeignKey(VendorProfile, on_delete=models.CASCADE)
     
@@ -48,7 +86,6 @@ class ProductListing(AbstractProduct):
     def can_access_dashboard(self):
         """Check if vendor has access to dashboard features"""
         return self.vendor.bond_paid or self.vendor.bond_waived
-    category = models.CharField(max_length=100)
     origin_country = models.CharField(max_length=100)
     
     # Payment Methods

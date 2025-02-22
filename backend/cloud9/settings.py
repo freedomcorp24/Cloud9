@@ -5,6 +5,8 @@ from oscar.defaults import *
 from pathlib import Path
 import environ
 import os
+import dj_database_url
+from decimal import Decimal
 
 # Initialize environment variables
 env = environ.Env()
@@ -27,8 +29,6 @@ ALLOWED_HOSTS = []
 
 
 # Application definition
-from oscar.defaults import *
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -139,38 +139,26 @@ WSGI_APPLICATION = 'cloud9.wsgi.application'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': env('DB_NAME', default='cloud9_main'),
-        'USER': env('DB_USER', default='postgres'),
-        'PASSWORD': env('DB_PASSWORD', default='postgres'),
-        'HOST': env('DB_HOST', default='localhost'),
-        'PORT': env('DB_PORT', default='5432'),
-    },
-    'payment': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': env('PAYMENT_DB_NAME', default='cloud9_payments'),
-        'USER': env('PAYMENT_DB_USER', default='postgres'),
-        'PASSWORD': env('PAYMENT_DB_PASSWORD', default='postgres'),
-        'HOST': env('PAYMENT_DB_HOST', default='localhost'),
-        'PORT': env('PAYMENT_DB_PORT', default='5433'),
-    },
-    'analytics': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': env('ANALYTICS_DB_NAME', default='cloud9_analytics'),
-        'USER': env('ANALYTICS_DB_USER', default='postgres'),
-        'PASSWORD': env('ANALYTICS_DB_PASSWORD', default='postgres'),
-        'HOST': env('ANALYTICS_DB_HOST', default='localhost'),
-        'PORT': env('ANALYTICS_DB_PORT', default='5434'),
-    }
+    'default': dj_database_url.config(
+        default='postgresql://cloud9_user:secure_password@localhost:5432/cloud9_db',
+        conn_max_age=600
+    ),
+    'payment': dj_database_url.config(
+        env='PAYMENT_DATABASE_URL',
+        default='postgresql://cloud9_user:secure_password@localhost:5433/cloud9_payment',
+        conn_max_age=600
+    ),
+    'analytics': dj_database_url.config(
+        env='ANALYTICS_DATABASE_URL',
+        default='postgresql://cloud9_user:secure_password@localhost:5434/cloud9_analytics',
+        conn_max_age=600
+    )
 }
 
 DATABASE_ROUTERS = [
     'cloud9.routers.PaymentRouter',
-    'cloud9.routers.AnalyticsRouter',
+    'cloud9.routers.AnalyticsRouter'
 ]
-
-
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
 
@@ -293,7 +281,6 @@ CRYPTO_API_TIMEOUT = env.int('CRYPTO_API_TIMEOUT', default=30)
 MAX_WITHDRAWALS_PER_HOUR = env.int('MAX_WITHDRAWALS_PER_HOUR', default=5)
 MAX_WITHDRAWALS_TO_ADDRESS = env.int('MAX_WITHDRAWALS_TO_ADDRESS', default=3)
 MAX_ADDRESS_RISK_SCORE = env.float('MAX_ADDRESS_RISK_SCORE', default=0.7)
-from decimal import Decimal
 MAX_TRANSACTION_AMOUNT = Decimal(env('MAX_TRANSACTION_AMOUNT', default='10000.00'))
 BTC_MIN_CONFIRMATIONS = env.int('BTC_MIN_CONFIRMATIONS', default=3)
 XMR_MIN_CONFIRMATIONS = env.int('XMR_MIN_CONFIRMATIONS', default=10)
