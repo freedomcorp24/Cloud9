@@ -19,6 +19,13 @@ void main() {
                 defaultValue: 'http://localhost:8000'),
           ),
         ),
+        ChangeNotifierProxyProvider<ApiService, ProductProvider>(
+          create: (context) => ProductProvider(
+            Provider.of<ApiService>(context, listen: false),
+          ),
+          update: (context, apiService, previous) =>
+              previous ?? ProductProvider(apiService),
+        ),
       ],
       child: const Cloud9App(),
     ),
@@ -41,6 +48,10 @@ class Cloud9App extends StatelessWidget {
           routes: {
             '/': (context) => const MainScreen(),
             '/product/list': (context) => ProductListScreen(),
+            '/product/detail': (context) {
+              final productId = ModalRoute.of(context)!.settings.arguments as String;
+              return ProductDetailScreen(productId: productId);
+            },
             '/wallet': (context) => WalletScreen(),
             '/orders/tracking': (context) => OrderTrackingScreen(),
           },

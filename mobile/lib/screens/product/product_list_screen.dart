@@ -3,7 +3,18 @@ import 'package:provider/provider.dart';
 import '../../models/product.dart';
 import '../../services/api_service.dart';
 
-class ProductListScreen extends StatelessWidget {
+class ProductListScreen extends StatefulWidget {
+  @override
+  _ProductListScreenState createState() => _ProductListScreenState();
+}
+
+class _ProductListScreenState extends State<ProductListScreen> {
+  @override
+  void initState() {
+    super.initState();
+    Provider.of<ProductProvider>(context, listen: false).loadProducts();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -21,10 +32,19 @@ class ProductListScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: Consumer<ApiService>(
-        builder: (context, apiService, child) {
-          return FutureBuilder<List<Product>>(
-            future: apiService.getProducts(),
+      body: Consumer<ProductProvider>(
+        builder: (context, productProvider, child) {
+          if (productProvider.isLoading) {
+            return Center(child: CircularProgressIndicator());
+          }
+          
+          if (productProvider.error != null) {
+            return Center(
+              child: Text('Error: ${productProvider.error}'),
+            );
+          }
+          
+          final products = productProvider.products;
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return Center(child: CircularProgressIndicator());
@@ -80,7 +100,7 @@ class ProductListItem extends StatelessWidget {
           Navigator.pushNamed(
             context,
             '/product/detail',
-            arguments: product,
+            arguments: product.id,
           );
         },
       ),
