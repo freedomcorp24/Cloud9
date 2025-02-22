@@ -98,6 +98,37 @@ class UserProfile(models.Model):
         help_text=_('Timestamp until PIN entry is locked')
     )
     
+    # Account status and management
+    STATUS_CHOICES = [
+        ('active', _('Active')),
+        ('frozen', _('Frozen')),
+        ('suspended', _('Suspended')),
+        ('banned', _('Banned'))
+    ]
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='active',
+        help_text=_('Account status')
+    )
+    status_reason = models.TextField(
+        blank=True,
+        help_text=_('Reason for current status')
+    )
+    frozen_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='accounts_frozen',
+        help_text=_('Admin who froze the account')
+    )
+    frozen_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text=_('When the account was frozen')
+    )
+    
     # Activity tracking
     last_active = models.DateTimeField(
         auto_now=True,
@@ -107,6 +138,22 @@ class UserProfile(models.Model):
         null=True,
         blank=True,
         help_text=_('IP address of last login')
+    )
+    
+    # Suspicious activity monitoring
+    daily_transaction_count = models.PositiveIntegerField(
+        default=0,
+        help_text=_('Number of transactions in last 24 hours')
+    )
+    daily_transaction_volume = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=0,
+        help_text=_('Total transaction volume in last 24 hours')
+    )
+    last_transaction_reset = models.DateTimeField(
+        auto_now_add=True,
+        help_text=_('When daily transaction counters were last reset')
     )
     
     # Preferences

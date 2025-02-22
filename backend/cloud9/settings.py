@@ -109,7 +109,7 @@ MIDDLEWARE = [
     'marketplace.middleware.vendor.VendorBondMiddleware',
     'marketplace.middleware.online.LastOnlineMiddleware',
     'marketplace.middleware.pgp.PGPAuthenticationMiddleware',
-    'marketplace.middleware.auth.TransactionPINMiddleware',
+    'marketplace.middleware.pin.TransactionPINMiddleware',
     'oscar.apps.basket.middleware.BasketMiddleware',
     'django.contrib.flatpages.middleware.FlatpageFallbackMiddleware',
     'tor_access.middleware.rate_limit.TorRateLimitMiddleware',
