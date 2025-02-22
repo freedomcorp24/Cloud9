@@ -4,6 +4,7 @@ Django settings for cloud9 project.
 from pathlib import Path
 import environ
 import os
+import sys
 from decimal import Decimal
 from oscar.defaults import *
 import dj_database_url
@@ -21,17 +22,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Security Settings
 SECRET_KEY = env('DJANGO_SECRET_KEY', default='THC9CBD#2025!j8k3m4n5p6q7r8s9t0uvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ')
-DEBUG = True  # Force debug mode for local testing
-ALLOWED_HOSTS = ['*']  # Allow all hosts for local testing
+DEBUG = False
+ALLOWED_HOSTS = ['.onion', 'localhost', '127.0.0.1']
 
-# Security Headers - All disabled for local testing
-SECURE_SSL_REDIRECT = False
-SESSION_COOKIE_SECURE = False
-CSRF_COOKIE_SECURE = False
-SECURE_HSTS_SECONDS = 0
-SECURE_HSTS_INCLUDE_SUBDOMAINS = False
-SECURE_HSTS_PRELOAD = False
-SECURE_PROXY_SSL_HEADER = None
+# Security Headers
+SECURE_SSL_REDIRECT = True
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+SECURE_HSTS_SECONDS = 31536000  # 1 year
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 
 # Application definition
@@ -42,6 +43,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    
+    # Custom apps
+    'marketplace.templatetags',
     'django.contrib.sites',
     'django.contrib.flatpages',
 
@@ -49,7 +53,7 @@ INSTALLED_APPS = [
     'widget_tweaks',
     'haystack',
     'django_redis',
-    'currencies',
+
     'djmoney',
 
     # Oscar apps - core
@@ -135,6 +139,8 @@ TEMPLATES = [
                 'oscar.apps.search.context_processors.search_form',
                 'oscar.apps.checkout.context_processors.checkout',
                 'oscar.core.context_processors.metadata',
+                'marketplace.context_processors.currency_choices',
+                'marketplace.context_processors.language_choices',
             ],
         },
     },
@@ -162,6 +168,27 @@ DATABASES = {
         conn_max_age=600
     )
 }
+
+# Test database configuration
+DATABASES['default']['TEST'] = {
+    'NAME': 'test_cloud9_db',
+    'SERIALIZE': False,
+    'DEPENDENCIES': [],
+}
+DATABASES['payment']['TEST'] = {
+    'NAME': 'test_cloud9_payment',
+    'DEPENDENCIES': ['default'],
+}
+DATABASES['analytics']['TEST'] = {
+    'NAME': 'test_cloud9_analytics',
+    'DEPENDENCIES': ['default'],
+}
+
+# Authentication settings
+AUTH_USER_MODEL = 'auth.User'
+
+# Test settings
+TEST_RUNNER = 'django.test.runner.DiscoverRunner'
 
 DATABASE_ROUTERS = [
     'cloud9.routers.PaymentRouter',
@@ -318,17 +345,27 @@ MAX_WITHDRAWALS_PER_HOUR = env.int('MAX_WITHDRAWALS_PER_HOUR', default=5)
 MAX_WITHDRAWALS_TO_ADDRESS = env.int('MAX_WITHDRAWALS_TO_ADDRESS', default=3)
 MAX_ADDRESS_RISK_SCORE = env.float('MAX_ADDRESS_RISK_SCORE', default=0.7)
 MAX_TRANSACTION_AMOUNT = Decimal(env('MAX_TRANSACTION_AMOUNT', default='10000.00'))
+
+# Confirmation requirements
 BTC_MIN_CONFIRMATIONS = env.int('BTC_MIN_CONFIRMATIONS', default=3)
 XMR_MIN_CONFIRMATIONS = env.int('XMR_MIN_CONFIRMATIONS', default=10)
+USDT_MIN_CONFIRMATIONS = env.int('USDT_MIN_CONFIRMATIONS', default=12)
+
+# Hot/Cold Wallet Configuration
+HOT_WALLET_MAX_BALANCE = Decimal(env('HOT_WALLET_MAX_BALANCE', default='10000.00'))
+HOT_WALLET_MIN_BALANCE = Decimal(env('HOT_WALLET_MIN_BALANCE', default='1000.00'))
+HOT_WALLET_REBALANCE_THRESHOLD = Decimal(env('HOT_WALLET_REBALANCE_THRESHOLD', default='8000.00'))
+COLD_WALLET_TRANSFER_DELAY = env.int('COLD_WALLET_TRANSFER_DELAY', default=3600)  # 1 hour in seconds
 
 # Currency Exchange Configuration
-EXCHANGE_BACKEND = env('EXCHANGE_BACKEND', default='marketplace.utils.exchange_rates.CoinGeckoExchangeBackend')
-EXCHANGE_API_KEY = env('EXCHANGE_API_KEY', default='')  # For future paid API support
+EXCHANGE_BACKEND = 'marketplace.utils.exchange_rates.CoinGeckoExchangeBackend'  # Only use CoinGecko
 CURRENCIES_CACHE_TIMEOUT = 900  # 15 minutes
+EXCHANGE_RATE_UPDATE_INTERVAL = 900  # 15 minutes in seconds
 
 # Currency configuration
-OSCAR_DEFAULT_CURRENCY = 'USD'
-OSCAR_CURRENCY_FORMAT = {
+OSCAR_DEFAULT_CURRENCY = 'USD'  # Default display currency
+SUPPORTED_CRYPTOCURRENCIES = ['BTC', 'XMR', 'USDT']  # Only accept these cryptocurrencies
+DISPLAY_CURRENCY_FORMAT = {
     'USD': {'currency_digits': False, 'format_type': 'accounting'},
     'EUR': {'currency_digits': False, 'format_type': 'accounting'},
     'GBP': {'currency_digits': False, 'format_type': 'accounting'},
@@ -365,8 +402,18 @@ BTC_NODE_URL = env('BTC_NODE_URL', default='http://localhost:8332')
 BTC_RPC_USER = env('BTC_RPC_USER', default='btcuser')
 BTC_RPC_PASSWORD = env('BTC_RPC_PASSWORD', default='btcpass')
 
+# Monero Configuration
 XMR_NODE_URL = env('XMR_NODE_URL', default='http://localhost:18081')
 XMR_RPC_PORT = env('XMR_RPC_PORT', default='18081')
+XMR_WALLET_RPC_URL = env('XMR_WALLET_RPC_URL', default='http://localhost:18083')
+XMR_WALLET_RPC_USER = env('XMR_WALLET_RPC_USER', default='monero')
+XMR_WALLET_RPC_PASSWORD = env('XMR_WALLET_RPC_PASSWORD', default='password')
+
+# Ethereum/USDT Configuration
+ETH_NODE_URL = env('ETH_NODE_URL', default='http://localhost:8545')
+ETH_CHAIN_ID = env.int('ETH_CHAIN_ID', default=1)  # 1 for mainnet
+USDT_CONTRACT_ADDRESS = env('USDT_CONTRACT_ADDRESS', default='0xdac17f958d2ee523a2206206994597c13d831ec7')
+USDT_ABI_PATH = os.path.join(BASE_DIR, 'crypto_payments/contracts/usdt_abi.json')
 
 # Delivery Tracking Settings
 MAPBOX_TOKEN = env('MAPBOX_TOKEN', default=None)
