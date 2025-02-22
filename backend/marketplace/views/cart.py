@@ -5,6 +5,8 @@ from django.urls import reverse_lazy
 from django.contrib import messages
 from django.utils.translation import gettext_lazy as _
 from django.db import transaction
+from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.exceptions import ValidationError
 from ..models.cart import Cart, CartItem
 from ..models.product import ProductListing
 from ..models.vendor import VendorProfile
@@ -47,9 +49,11 @@ class AddToCartView(LoginRequiredMixin, View):
     @transaction.atomic
     def post(self, request, product_id):
         product = get_object_or_404(ProductListing, id=product_id)
-        quantity = int(request.POST.get('quantity', 1))
-        
-        if quantity < 1 or quantity > 100:
+        try:
+            quantity = int(request.POST.get('quantity', 1))
+            MinValueValidator(1)(quantity)
+            MaxValueValidator(100)(quantity)
+        except (ValueError, ValidationError):
             messages.error(request, _('Invalid quantity. Must be between 1 and 100.'))
             return redirect('product:detail', pk=product_id)
             
@@ -91,13 +95,14 @@ class UpdateCartView(LoginRequiredMixin, View):
     
     def post(self, request, item_id):
         item = get_object_or_404(CartItem, id=item_id, cart__user=request.user)
-        quantity = int(request.POST.get('quantity', 1))
-        
-        if quantity < 1 or quantity > 100:
-            messages.error(request, _('Invalid quantity. Must be between 1 and 100.'))
-        else:
+        try:
+            quantity = int(request.POST.get('quantity', 1))
+            MinValueValidator(1)(quantity)
+            MaxValueValidator(100)(quantity)
             item.quantity = quantity
             item.save()
             messages.success(request, _('Cart updated successfully.'))
+        except (ValueError, ValidationError):
+            messages.error(request, _('Invalid quantity. Must be between 1 and 100.'))
             
         return redirect('cart:view')
