@@ -1,8 +1,8 @@
-{% extends "oscar/customer/profile/base.html" %}
+{% extends "customer/profile/base.html" %}
 {% load i18n %}
 {% load currency_display %}
 
-{% block content %}
+{% block tabcontent %}
 <div class="profile-preferences">
     <h2>{% trans "Display Preferences" %}</h2>
     
@@ -10,31 +10,35 @@
         {% csrf_token %}
         
         <div class="form-group">
-            <label>{% trans "Display Currency" %}</label>
-            <select name="display_currency" class="form-control">
-                {% for code, name in currency_choices %}
-                <option value="{{ code }}" {% if code == object.display_currency %}selected{% endif %}>
-                    {{ name }}
-                </option>
-                {% endfor %}
-            </select>
-            <small class="text-muted crypto-notice">
-                {% trans "* Prices shown for reference only. Payments accepted in BTC, XMR, and USDT." %}
-            </small>
+            <label class="control-label">{% trans "Display Currency" %}</label>
+            <div class="controls">
+                <select name="display_currency" class="form-control">
+                    {% for code, name in currency_choices %}
+                    <option value="{{ code }}" {% if code == object.display_currency %}selected{% endif %}>
+                        {{ name }}
+                    </option>
+                    {% endfor %}
+                </select>
+                <span class="help-block crypto-notice">
+                    {% trans "* Prices shown for reference only. Payments accepted in BTC, XMR, and USDT." %}
+                </span>
+            </div>
         </div>
         
         <div class="form-group">
-            <label>{% trans "Language" %}</label>
-            <select name="language" class="form-control">
-                {% for code, name in languages %}
-                <option value="{{ code }}" {% if code == object.language %}selected{% endif %}>
-                    {{ name }}
-                </option>
-                {% endfor %}
-            </select>
-            <small class="text-muted">
-                {% trans "Choose your preferred language for the interface" %}
-            </small>
+            <label class="control-label">{% trans "Language" %}</label>
+            <div class="controls">
+                <select name="language" class="form-control">
+                    {% for code, name in languages %}
+                    <option value="{{ code }}" {% if code == object.language %}selected{% endif %}>
+                        {{ name }}
+                    </option>
+                    {% endfor %}
+                </select>
+                <span class="help-block">
+                    {% trans "Choose your preferred language for the interface" %}
+                </span>
+            </div>
         </div>
         
         <div class="form-group">
