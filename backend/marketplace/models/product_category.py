@@ -2,8 +2,10 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.utils.text import slugify
 from oscar.core.loading import get_model
+from typing import Any, TypeVar
 
 Category = get_model('catalogue', 'Category')
+CategoryType = TypeVar('CategoryType', bound=Any)  # Type for Category model
 
 class UncategorizedProductManager:
     """Manages products without categories."""
@@ -11,7 +13,7 @@ class UncategorizedProductManager:
     UNCATEGORIZED_SLUG = 'uncategorized'
     
     @classmethod
-    def get_uncategorized_category(cls) -> Category:
+    def get_uncategorized_category(cls) -> CategoryType:
         """Get or create the Uncategorized category."""
         return Category.objects.get_or_create(
             slug=cls.UNCATEGORIZED_SLUG,
