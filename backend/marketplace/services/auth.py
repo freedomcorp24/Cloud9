@@ -9,8 +9,13 @@ class TransactionPINService:
     LOCKOUT_DURATION = timedelta(minutes=30)
     
     @staticmethod
-    def verify_pin(user_profile: UserProfile, pin: str) -> bool:
+    def verify_pin(user, pin: str) -> bool:
         """Verify transaction PIN and handle lockouts"""
+        try:
+            user_profile = UserProfile.objects.get(user=user)
+        except UserProfile.DoesNotExist:
+            return False
+            
         # Check if PIN is locked
         if user_profile.pin_locked_until and user_profile.pin_locked_until > timezone.now():
             return False
@@ -38,13 +43,17 @@ class TransactionPINService:
         return True
         
     @staticmethod
-    def set_pin(user_profile: UserProfile, new_pin: str) -> bool:
+    def set_pin(user, new_pin: str) -> bool:
         """Set or update transaction PIN"""
         if not new_pin.isdigit() or len(new_pin) != 6:
             return False
             
-        user_profile.transaction_pin = new_pin
-        user_profile.pin_attempts = 0
-        user_profile.pin_locked_until = None
-        user_profile.save()
-        return True
+        try:
+            user_profile = UserProfile.objects.get(user=user)
+            user_profile.transaction_pin = new_pin
+            user_profile.pin_attempts = 0
+            user_profile.pin_locked_until = None
+            user_profile.save()
+            return True
+        except UserProfile.DoesNotExist:
+            return False
