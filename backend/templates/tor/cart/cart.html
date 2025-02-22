@@ -1,0 +1,79 @@
+{% extends "tor/base.html" %}
+{% load i18n %}
+
+{% block content %}
+<div class="cart-container">
+    <h2>{% trans "Shopping Cart" %}</h2>
+    
+    {% if carts %}
+        {% for cart in carts %}
+        <div class="vendor-cart">
+            <h3>{% trans "Items from" %} {{ cart.vendor.public_username }}</h3>
+            
+            <table class="cart-items">
+                <thead>
+                    <tr>
+                        <th>{% trans "Product" %}</th>
+                        <th>{% trans "Quantity" %}</th>
+                        <th>{% trans "Unit Price" %}</th>
+                        <th>{% trans "Total" %}</th>
+                        <th>{% trans "Actions" %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in cart.items %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'product:detail' pk=item.product.id %}">
+                                {{ item.product.title }}
+                            </a>
+                        </td>
+                        <td>
+                            <form method="post" action="{% url 'cart:update' item_id=item.id %}">
+                                {% csrf_token %}
+                                <select name="quantity">
+                                    {% for i in "x"|rjust:"100" %}
+                                        <option value="{{ forloop.counter }}" {% if item.quantity == forloop.counter %}selected{% endif %}>
+                                            {{ forloop.counter }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                <button type="submit">{% trans "Update" %}</button>
+                            </form>
+                        </td>
+                        <td>{{ item.unit_price }}</td>
+                        <td>{{ item.total_price }}</td>
+                        <td>
+                            <form method="post" action="{% url 'cart:remove' item_id=item.id %}">
+                                {% csrf_token %}
+                                <button type="submit">{% trans "Remove" %}</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="3">{% trans "Subtotal" %}</td>
+                        <td colspan="2">{{ cart.total }}</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        {% endfor %}
+        
+        <div class="cart-summary">
+            <h3>{% trans "Order Summary" %}</h3>
+            <p><strong>{% trans "Total" %}:</strong> {{ total }}</p>
+            <form method="get" action="{% url 'checkout:index' %}">
+                <button type="submit">{% trans "Proceed to Checkout" %}</button>
+            </form>
+        </div>
+    {% else %}
+        <p>{% trans "Your cart is empty." %}</p>
+        <form method="get" action="{% url 'product:list' %}">
+            <button type="submit">{% trans "Continue Shopping" %}</button>
+        </form>
+    {% endif %}
+</div>
+{% endblock %}
