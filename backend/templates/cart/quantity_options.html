@@ -1,5 +1,1 @@
-{% spaceless %}
-{% for i in options %}
-    <option value="{{ i }}" {% if i == current_quantity %}selected{% endif %}>{{ i }}</option>
-{% endfor %}
-{% endspaceless %}
+{% for i in options %}<option value="{{ i }}"{% if i == current_quantity %} selected{% endif %}>{{ i }}</option>{% endfor %}
