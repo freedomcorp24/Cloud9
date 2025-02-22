@@ -1,0 +1,97 @@
+{% extends "tor/base.html" %}
+{% load i18n %}
+
+{% block content %}
+<div class="checkout-container">
+    <h2>{% trans "Checkout" %}</h2>
+    
+    {% if not checkout_session.pin_verified %}
+    <div class="pin-verification">
+        <h3>{% trans "Transaction PIN Verification" %}</h3>
+        <form method="post" action="{% url 'checkout:verify_pin' %}">
+            {% csrf_token %}
+            {% for field in pin_form %}
+            <div class="form-field">
+                {{ field.label_tag }}
+                {{ field }}
+                {% if field.help_text %}
+                <p class="help">{{ field.help_text }}</p>
+                {% endif %}
+                {% if field.errors %}
+                <ul class="errors">
+                    {% for error in field.errors %}
+                    <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+            </div>
+            {% endfor %}
+            <button type="submit">{% trans "Verify PIN" %}</button>
+        </form>
+    </div>
+    {% else %}
+    <div class="delivery-details">
+        <h3>{% trans "Delivery Details" %}</h3>
+        <form method="post" action="{% url 'checkout:delivery_details' %}">
+            {% csrf_token %}
+            {% for field in delivery_form %}
+            <div class="form-field">
+                {{ field.label_tag }}
+                {{ field }}
+                {% if field.help_text %}
+                <p class="help">{{ field.help_text }}</p>
+                {% endif %}
+                {% if field.errors %}
+                <ul class="errors">
+                    {% for error in field.errors %}
+                    <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+            </div>
+            {% endfor %}
+            <button type="submit">{% trans "Continue to Payment" %}</button>
+        </form>
+    </div>
+    {% endif %}
+    
+    <div class="order-summary">
+        <h3>{% trans "Order Summary" %}</h3>
+        {% for cart in carts %}
+        <div class="vendor-cart">
+            <h4>{% trans "Items from" %} {{ cart.vendor.public_username }}</h4>
+            <table class="cart-items">
+                <thead>
+                    <tr>
+                        <th>{% trans "Product" %}</th>
+                        <th>{% trans "Quantity" %}</th>
+                        <th>{% trans "Unit Price" %}</th>
+                        <th>{% trans "Total" %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in cart.items %}
+                    <tr>
+                        <td>{{ item.product.title }}</td>
+                        <td>{{ item.quantity }}</td>
+                        <td>{{ item.unit_price }}</td>
+                        <td>{{ item.total_price }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="3">{% trans "Subtotal" %}</td>
+                        <td>{{ cart.total }}</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        {% endfor %}
+        
+        <div class="total">
+            <strong>{% trans "Total" %}:</strong> {{ total }}
+        </div>
+    </div>
+</div>
+{% endblock %}
