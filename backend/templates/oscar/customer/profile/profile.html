@@ -41,14 +41,14 @@
             <div class="checkbox">
                 <label>
                     <input type="checkbox" name="auto_detect_language" 
-                           {% if profile.auto_detect_language %}checked{% endif %}>
+                           {% if object.auto_detect_language %}checked{% endif %}>
                     {% trans "Automatically detect language from browser" %}
                 </label>
             </div>
             <div class="checkbox">
                 <label>
                     <input type="checkbox" name="auto_detect_currency" 
-                           {% if profile.auto_detect_currency %}checked{% endif %}>
+                           {% if object.auto_detect_currency %}checked{% endif %}>
                     {% trans "Automatically detect currency from location" %}
                 </label>
             </div>
