@@ -1,0 +1,164 @@
+{% extends "clearnet/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container">
+  <h1>Order Tracking</h1>
+  
+  <!-- Order Status -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <h5 class="card-title">Order Status</h5>
+      <p class="card-text">Current Status: {{ order.get_status_display }}</p>
+      {% if order.latest_update %}
+        <p class="card-text">Latest Update: {{ order.latest_update.status_update }}</p>
+        <p class="card-text text-muted">Updated {{ order.latest_update.timestamp|timesince }} ago</p>
+      {% endif %}
+    </div>
+  </div>
+  
+  <!-- Map View -->
+  {% if order.driver_location and order.tracking_enabled %}
+    <div class="card mb-4">
+      <div class="card-body">
+        <div id="map" style="height: 400px;"></div>
+      </div>
+    </div>
+    
+    <script>
+      function initMap() {
+        const map = new google.maps.Map(document.getElementById('map'), {
+          zoom: 15,
+          center: { 
+            lat: {{ order.driver_location.latitude }}, 
+            lng: {{ order.driver_location.longitude }} 
+          }
+        });
+        
+        // Driver marker
+        new google.maps.Marker({
+          position: { 
+            lat: {{ order.driver_location.latitude }}, 
+            lng: {{ order.driver_location.longitude }} 
+          },
+          map,
+          title: 'Driver Location'
+        });
+        
+        // Delivery location marker
+        new google.maps.Marker({
+          position: { 
+            lat: {{ order.delivery_latitude }}, 
+            lng: {{ order.delivery_longitude }} 
+          },
+          map,
+          title: 'Delivery Location'
+        });
+      }
+    </script>
+    <script async defer
+      src="https://maps.googleapis.com/maps/api/js?key={{ maps_api_key }}&callback=initMap">
+    </script>
+  {% endif %}
+  
+  <!-- Status Updates -->
+  {% if order.status_updates.exists %}
+    <div class="card mb-4">
+      <div class="card-body">
+        <h5 class="card-title">Status Updates</h5>
+        <div class="timeline">
+          {% for update in order.status_updates.all %}
+            <div class="timeline-item">
+              <div class="timeline-marker"></div>
+              <div class="timeline-content">
+                <h6>{{ update.get_status_display }}</h6>
+                <p>{{ update.notes }}</p>
+                <small class="text-muted">{{ update.created_at|timesince }} ago</small>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  {% endif %}
+  
+  <!-- Driver Controls -->
+  {% if user.is_driver and order.driver == user %}
+    <div class="card mb-4">
+      <div class="card-body">
+        <h5 class="card-title">Driver Controls</h5>
+        
+        <!-- Status Update Form -->
+        <form method="post" action="{% url 'order:update_status' order.id %}">
+          {% csrf_token %}
+          <div class="form-group">
+            <label for="status">Update Status</label>
+            <select class="form-control" name="status" id="status">
+              <option value="pickup">At Pickup Location</option>
+              <option value="in_transit">In Transit</option>
+              <option value="nearby">Nearby Delivery Location</option>
+              <option value="arrived">Arrived at Delivery Location</option>
+              <option value="completed">Delivery Completed</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="notes">Notes</label>
+            <textarea class="form-control" name="notes" id="notes"></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary">Update Status</button>
+        </form>
+        
+        <!-- Location Tracking Toggle -->
+        <form method="post" action="{% url 'order:toggle_tracking' order.id %}" class="mt-3">
+          {% csrf_token %}
+          <div class="custom-control custom-switch">
+            <input type="checkbox" class="custom-control-input" id="trackingToggle" 
+                   name="tracking_enabled" {% if order.tracking_enabled %}checked{% endif %}
+                   onchange="this.form.submit()">
+            <label class="custom-control-label" for="trackingToggle">Enable Location Tracking</label>
+          </div>
+        </form>
+      </div>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.timeline {
+  position: relative;
+  padding: 20px 0;
+}
+
+.timeline-item {
+  padding-left: 40px;
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.timeline-marker {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #e9ecef;
+}
+
+.timeline-marker:before {
+  content: '';
+  position: absolute;
+  left: -4px;
+  top: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #007bff;
+}
+
+.timeline-content {
+  padding-bottom: 20px;
+}
+</style>
+{% endblock %}
