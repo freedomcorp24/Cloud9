@@ -1,12 +1,12 @@
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 from django.views.generic import View, TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import redirect, get_object_or_404
 from django.urls import reverse_lazy
 from django.contrib import messages
 from django.db import transaction
-from django.core.validators import MinValueValidator, MaxValueValidator
 from django.core.exceptions import ValidationError
+from ..forms.cart import AddToCartForm, UpdateCartForm
 from ..models.cart import Cart, CartItem
 from ..models.product import ProductListing
 from ..models.vendor import VendorProfile
@@ -49,13 +49,13 @@ class AddToCartView(LoginRequiredMixin, View):
     @transaction.atomic
     def post(self, request, product_id):
         product = get_object_or_404(ProductListing, id=product_id)
-        try:
-            quantity = int(request.POST.get('quantity', 1))
-            MinValueValidator(1)(quantity)
-            MaxValueValidator(100)(quantity)
-        except (ValueError, ValidationError):
-            messages.error(request, _('Invalid quantity. Must be between 1 and 100.'))
+        form = AddToCartForm(request.POST)
+        if not form.is_valid():
+            for error in form.errors['quantity']:
+                messages.error(request, error)
             return redirect('product:detail', pk=product_id)
+            
+        quantity = form.cleaned_data['quantity']
             
         # Get or create cart for this vendor
         cart, _ = Cart.objects.get_or_create(
@@ -95,14 +95,13 @@ class UpdateCartView(LoginRequiredMixin, View):
     
     def post(self, request, item_id):
         item = get_object_or_404(CartItem, id=item_id, cart__user=request.user)
-        try:
-            quantity = int(request.POST.get('quantity', 1))
-            MinValueValidator(1)(quantity)
-            MaxValueValidator(100)(quantity)
-            item.quantity = quantity
+        form = UpdateCartForm(request.POST)
+        if form.is_valid():
+            item.quantity = form.cleaned_data['quantity']
             item.save()
             messages.success(request, _('Cart updated successfully.'))
-        except (ValueError, ValidationError):
-            messages.error(request, _('Invalid quantity. Must be between 1 and 100.'))
+        else:
+            for error in form.errors['quantity']:
+                messages.error(request, error)
             
         return redirect('cart:view')
