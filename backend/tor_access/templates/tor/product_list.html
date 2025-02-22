@@ -1,8 +1,7 @@
-{% extends "oscar/base.html" %}
+{% extends "tor/base.html" %}
 {% load i18n %}
 {% load currency_filters %}
 {% load purchase_info_tags %}
-{% load static %}
 
 {% block title %}
     {% trans "Products" %} | {{ block.super }}
@@ -35,6 +34,17 @@
             </select>
         </div>
         <div class="form-group">
+            <label for="currency">Display Price In:</label>
+            <select name="currency" id="currency">
+                <option value="USD" selected>USD (Default)</option>
+                <option value="EUR">EUR</option>
+                <option value="GBP">GBP</option>
+                <option value="JPY">JPY</option>
+                <option value="AUD">AUD</option>
+            </select>
+            <small>* Prices shown in fiat for reference only. Payments accepted in BTC, XMR, and USDT only.</small>
+        </div>
+        <div class="form-group">
             <label for="sort">Sort by:</label>
             <select name="sort" id="sort">
                 <option value="price_asc">Price: Low to High</option>
@@ -61,7 +71,7 @@
                     {% endif %}
                     {% with stock=product.stockrecords.first %}
                         <p>
-                            {% if stock and stock.num_in_stock > 0 %}
+                            {% if stock.num_in_stock %}
                                 In Stock ({{ stock.num_in_stock }} available)
                             {% else %}
                                 Out of Stock
@@ -77,7 +87,7 @@
                     <label for="quantity">Quantity:</label>
                     <input type="number" name="quantity" id="quantity" value="1" min="1" 
                            max="{{ stock.num_in_stock|default:'0' }}"
-                           {% if not stock or stock.num_in_stock <= 0 %}disabled{% endif %}>
+                           {% if not stock.num_in_stock %}disabled{% endif %}>
                 </div>
                 <div class="form-group">
                     <label for="shipping">Shipping Option:</label>
@@ -91,7 +101,7 @@
                     </select>
                 </div>
                 <button type="submit" class="btn" 
-                        {% if not stock or stock.num_in_stock <= 0 %}disabled{% endif %}>
+                        {% if not stock.num_in_stock %}disabled{% endif %}>
                     Add to Cart
                 </button>
             </form>

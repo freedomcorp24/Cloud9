@@ -2,10 +2,12 @@ from django.db import models
 from django.conf import settings
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils.translation import gettext_lazy as _
+from django.utils import timezone
 from oscar.apps.order.abstract_models import AbstractOrder
 from .vendor import VendorProfile, VendorProduct
 from .order_status import OrderStatus
 from decimal import Decimal
+from datetime import timedelta
 
 class DeliveryOrder(AbstractOrder):
     """

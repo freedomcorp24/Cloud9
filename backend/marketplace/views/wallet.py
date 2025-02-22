@@ -8,6 +8,7 @@ from ..models.wallet import UserWallet
 from ..forms.wallet import WithdrawalForm
 from ..services.wallet import WalletService
 from ..services.auth import TransactionPINService
+from crypto_payments.payment_service import CryptoPaymentService
 
 class WalletDashboardView(LoginRequiredMixin, TemplateView):
     """Main wallet dashboard view"""
@@ -15,7 +16,7 @@ class WalletDashboardView(LoginRequiredMixin, TemplateView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        wallet, _ = UserWallet.objects.get_or_create(user=self.request.user.profile)
+        wallet, _ = UserWallet.objects.get_or_create(user=self.request.user)
         context['wallet'] = wallet
         return context
 
@@ -26,10 +27,11 @@ class WalletDepositView(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         currency = self.kwargs.get('currency')
-        wallet, _ = UserWallet.objects.get_or_create(user=self.request.user.profile)
+        wallet, _ = UserWallet.objects.get_or_create(user=self.request.user)
         
-        # Get or generate deposit address
-        deposit_address = self.request.crypto_payment_server.get_deposit_address(
+        # Get or generate deposit address from payment service
+        payment_service = CryptoPaymentService()
+        deposit_address = payment_service.get_deposit_address(
             wallet=wallet,
             currency=currency
         )
@@ -58,7 +60,7 @@ class WalletWithdrawView(LoginRequiredMixin, FormView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         currency = self.kwargs.get('currency')
-        wallet, _ = UserWallet.objects.get_or_create(user=self.request.user.profile)
+        wallet, _ = UserWallet.objects.get_or_create(user=self.request.user)
         
         context.update({
             'wallet': wallet,
@@ -69,11 +71,11 @@ class WalletWithdrawView(LoginRequiredMixin, FormView):
         
     def form_valid(self, form):
         currency = self.kwargs.get('currency')
-        wallet = self.request.user.profile.wallet
+        wallet = UserWallet.objects.get(user=self.request.user)
         
         # Verify PIN
         pin_service = TransactionPINService()
-        if not pin_service.verify_pin(self.request.user.profile, form.cleaned_data['pin']):
+        if not pin_service.verify_pin(self.request.user, form.cleaned_data['pin']):
             messages.error(self.request, _('Invalid transaction PIN'))
             return self.form_invalid(form)
             
@@ -101,7 +103,8 @@ class WalletWithdrawView(LoginRequiredMixin, FormView):
                 return self.form_invalid(form)
                 
             # Process withdrawal
-            self.request.crypto_payment_server.process_withdrawal(
+            payment_service = CryptoPaymentService()
+            payment_service.process_withdrawal(
                 wallet=wallet,
                 currency=currency,
                 amount=amount,

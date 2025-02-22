@@ -2,6 +2,11 @@ from django.db import models
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
+from django.utils import translation
+
+User = get_user_model()
+from django.contrib.auth import get_user_model
 from django_countries.fields import CountryField
 from djmoney.models.fields import MoneyField
 from babel import Locale, UnknownLocaleError

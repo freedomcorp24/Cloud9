@@ -1,6 +1,9 @@
 from django.utils import translation
 from django.conf import settings
 from django.utils.deprecation import MiddlewareMixin
+from django.utils.translation import get_language_from_request
+from django.contrib.auth.models import AnonymousUser
+from django.utils.deprecation import MiddlewareMixin
 from typing import Optional
 
 class LanguageDetectionMiddleware(MiddlewareMixin):
