@@ -1,0 +1,84 @@
+{% extends "customer/profile/base.html" %}
+{% load i18n %}
+{% load currency_display %}
+
+{% block profile_content %}
+<div class="profile-preferences">
+    <h2>{% trans "Display Preferences" %}</h2>
+    
+    <form method="post" class="form-horizontal">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label>{% trans "Display Currency" %}</label>
+            <select name="display_currency" class="form-control">
+                {% for code, name in currency_choices %}
+                <option value="{{ code }}" {% if code == profile.display_currency %}selected{% endif %}>
+                    {{ code }}
+                </option>
+                {% endfor %}
+            </select>
+            <small class="text-muted crypto-notice">
+                {% trans "* Prices shown for reference only. Payments accepted in BTC, XMR, and USDT." %}
+            </small>
+        </div>
+        
+        <div class="form-group">
+            <label>{% trans "Language" %}</label>
+            <select name="language" class="form-control">
+                {% for code, name in languages %}
+                <option value="{{ code }}" {% if code == profile.language %}selected{% endif %}>
+                    {{ name }}
+                </option>
+                {% endfor %}
+            </select>
+            <small class="text-muted">
+                {% trans "Choose your preferred language for the interface" %}
+            </small>
+        </div>
+        
+        <div class="form-group">
+            <div class="checkbox">
+                <label>
+                    <input type="checkbox" name="auto_detect_language" 
+                           {% if profile.auto_detect_language %}checked{% endif %}>
+                    {% trans "Automatically detect language from browser" %}
+                </label>
+            </div>
+            <div class="checkbox">
+                <label>
+                    <input type="checkbox" name="auto_detect_currency" 
+                           {% if profile.auto_detect_currency %}checked{% endif %}>
+                    {% trans "Automatically detect currency from location" %}
+                </label>
+            </div>
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+                {% trans "Update Preferences" %}
+            </button>
+        </div>
+    </form>
+</div>
+
+<style nonce="{{ request.csp_nonce }}">
+.profile-preferences {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+}
+.form-group {
+    margin-bottom: 20px;
+}
+.crypto-notice {
+    color: #721c24;
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    padding: 8px;
+    margin-top: 5px;
+    border-radius: 4px;
+    display: block;
+}
+</style>
+{% endblock %}
