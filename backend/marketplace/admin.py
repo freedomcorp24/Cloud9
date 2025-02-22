@@ -1,8 +1,10 @@
 from django.contrib import admin
+from mptt.admin import MPTTModelAdmin
 from .models import (
     VendorProfile, VendorProduct, DeliveryOrder,
     OrderDispute, DeliveryTracking, UserWallet, 
-    WithdrawalAddress, PostageOption
+    WithdrawalAddress, PostageOption, MarketplaceCategory,
+    ProductCategory
 )
 
 @admin.register(VendorProfile)
@@ -56,6 +58,51 @@ class VendorProductAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         })
     )
+
+@admin.register(MarketplaceCategory)
+class MarketplaceCategoryAdmin(MPTTModelAdmin):
+    """Admin interface for category management"""
+    list_display = ['name', 'slug', 'parent', 'is_active', 'created_by', 'created_at']
+    list_filter = ['is_active', 'created_at', 'updated_at']
+    search_fields = ['name', 'slug', 'description']
+    prepopulated_fields = {'slug': ('name',)}
+    raw_id_fields = ['parent']
+    
+    def save_model(self, request, obj, form, change):
+        """Ensure admin user is tracked"""
+        if not change:  # New category
+            obj.created_by = request.user
+        obj.updated_by = request.user
+        super().save_model(request, obj, form, change)
+        
+    def get_queryset(self, request):
+        """Show all categories to superusers, only active ones to staff"""
+        qs = super().get_queryset(request)
+        if not request.user.is_superuser:
+            qs = qs.filter(is_active=True)
+        return qs
+        
+    def has_change_permission(self, request, obj=None):
+        """Only allow superusers to edit categories"""
+        return request.user.is_superuser
+        
+    def has_delete_permission(self, request, obj=None):
+        """Only allow superusers to delete categories"""
+        return request.user.is_superuser
+
+@admin.register(ProductCategory)
+class ProductCategoryAdmin(admin.ModelAdmin):
+    """Admin interface for product categorization"""
+    list_display = ['product', 'category', 'added_by', 'added_at']
+    list_filter = ['category', 'added_at']
+    raw_id_fields = ['product', 'category']
+    search_fields = ['product__name', 'category__name']
+    
+    def save_model(self, request, obj, form, change):
+        """Track who added the categorization"""
+        if not change:
+            obj.added_by = request.user
+        super().save_model(request, obj, form, change)
 
 @admin.register(DeliveryOrder)
 class DeliveryOrderAdmin(admin.ModelAdmin):
