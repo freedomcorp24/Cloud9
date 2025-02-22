@@ -21,16 +21,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Security Settings
 SECRET_KEY = env('DJANGO_SECRET_KEY', default='THC9CBD#2025!j8k3m4n5p6q7r8s9t0uvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ')
-DEBUG = env.bool('DJANGO_DEBUG', default=False)
-ALLOWED_HOSTS = env.list('DJANGO_ALLOWED_HOSTS', default=['localhost', '127.0.0.1'])
+DEBUG = True  # Force debug mode for local testing
+ALLOWED_HOSTS = ['*']  # Allow all hosts for local testing
 
-# Security Headers
-SECURE_SSL_REDIRECT = True
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
-SECURE_HSTS_SECONDS = 31536000  # 1 year
-SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-SECURE_HSTS_PRELOAD = True
+# Security Headers - All disabled for local testing
+SECURE_SSL_REDIRECT = False
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = False
+SECURE_HSTS_SECONDS = 0
+SECURE_HSTS_INCLUDE_SUBDOMAINS = False
+SECURE_HSTS_PRELOAD = False
+SECURE_PROXY_SSL_HEADER = None
 
 
 # Application definition
@@ -48,6 +49,8 @@ INSTALLED_APPS = [
     'widget_tweaks',
     'haystack',
     'django_redis',
+    'currencies',
+    'djmoney',
 
     # Oscar apps - core
     'oscar.config.Shop',
@@ -94,20 +97,21 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'marketplace.middleware.javascript.TorJavaScriptMiddleware',
+    'tor_access.middleware.javascript.NoJavaScriptMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'marketplace.middleware.VendorBondMiddleware',
-    'marketplace.middleware.LastOnlineMiddleware',
-    'marketplace.middleware.PGPAuthenticationMiddleware',
+    'marketplace.middleware.vendor.VendorBondMiddleware',
+    'marketplace.middleware.online.LastOnlineMiddleware',
+    'marketplace.middleware.pgp.PGPAuthenticationMiddleware',
     'marketplace.middleware.auth.TransactionPINMiddleware',
     'oscar.apps.basket.middleware.BasketMiddleware',
     'django.contrib.flatpages.middleware.FlatpageFallbackMiddleware',
-    'tor_access.middleware.TorAccessMiddleware',
-    'marketplace.middleware.RateLimitMiddleware',
-    'marketplace.middleware.BasicAuthMiddleware',
+    'tor_access.middleware.rate_limit.TorRateLimitMiddleware',
+    'tor_access.middleware.captcha.TorCaptchaMiddleware',
+    'marketplace.middleware.rate_limit.RateLimitMiddleware',
+    'marketplace.middleware.basic_auth.BasicAuthMiddleware',
 ]
 
 # Environment settings
@@ -130,7 +134,6 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'oscar.apps.search.context_processors.search_form',
                 'oscar.apps.checkout.context_processors.checkout',
-                'oscar.apps.customer.notifications.context_processors.notifications',
                 'oscar.core.context_processors.metadata',
             ],
         },
@@ -289,6 +292,44 @@ MAX_ADDRESS_RISK_SCORE = env.float('MAX_ADDRESS_RISK_SCORE', default=0.7)
 MAX_TRANSACTION_AMOUNT = Decimal(env('MAX_TRANSACTION_AMOUNT', default='10000.00'))
 BTC_MIN_CONFIRMATIONS = env.int('BTC_MIN_CONFIRMATIONS', default=3)
 XMR_MIN_CONFIRMATIONS = env.int('XMR_MIN_CONFIRMATIONS', default=10)
+
+# Currency Exchange Configuration
+EXCHANGE_BACKEND = env('EXCHANGE_BACKEND', default='marketplace.utils.exchange_rates.CoinGeckoExchangeBackend')
+EXCHANGE_API_KEY = env('EXCHANGE_API_KEY', default='')  # For future paid API support
+CURRENCIES_CACHE_TIMEOUT = 900  # 15 minutes
+
+# Currency configuration
+OSCAR_DEFAULT_CURRENCY = 'USD'
+OSCAR_CURRENCY_FORMAT = {
+    'USD': {'currency_digits': False, 'format_type': 'accounting'},
+    'EUR': {'currency_digits': False, 'format_type': 'accounting'},
+    'GBP': {'currency_digits': False, 'format_type': 'accounting'},
+    'JPY': {'currency_digits': False, 'format_type': 'accounting'},
+    'CNY': {'currency_digits': False, 'format_type': 'accounting'},
+    'AUD': {'currency_digits': False, 'format_type': 'accounting'},
+    'CAD': {'currency_digits': False, 'format_type': 'accounting'},
+    'CHF': {'currency_digits': False, 'format_type': 'accounting'},
+    'NZD': {'currency_digits': False, 'format_type': 'accounting'},
+    'SGD': {'currency_digits': False, 'format_type': 'accounting'},
+    'INR': {'currency_digits': False, 'format_type': 'accounting'},
+    'BRL': {'currency_digits': False, 'format_type': 'accounting'},
+    'RUB': {'currency_digits': False, 'format_type': 'accounting'},
+    'ZAR': {'currency_digits': False, 'format_type': 'accounting'},
+    'MXN': {'currency_digits': False, 'format_type': 'accounting'},
+    'ARS': {'currency_digits': False, 'format_type': 'accounting'},
+    'SEK': {'currency_digits': False, 'format_type': 'accounting'},
+    'NOK': {'currency_digits': False, 'format_type': 'accounting'},
+    'DKK': {'currency_digits': False, 'format_type': 'accounting'},
+    'PLN': {'currency_digits': False, 'format_type': 'accounting'},
+    'THB': {'currency_digits': False, 'format_type': 'accounting'},
+    'IDR': {'currency_digits': False, 'format_type': 'accounting'},
+    'HKD': {'currency_digits': False, 'format_type': 'accounting'},
+    'KRW': {'currency_digits': False, 'format_type': 'accounting'},
+}
+
+# Generate currency choices from format settings
+OSCAR_CURRENCY_CHOICES = [(k, k) for k in OSCAR_CURRENCY_FORMAT.keys()]
+DISPLAY_CURRENCY_ONLY = True  # Only use currency for display
 WITHDRAWAL_CONFIRMATION_BLOCKS = env.int('WITHDRAWAL_CONFIRMATION_BLOCKS', default=6)
 
 # Node Configuration
