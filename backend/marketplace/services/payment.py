@@ -1,4 +1,5 @@
 from decimal import Decimal
+import logging
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
 from django.conf import settings
@@ -8,6 +9,8 @@ from crypto_payments.models import CryptoWallet, CryptoTransaction
 from crypto_payments.services.wallet_manager import WalletManager
 from ..models.order import DeliveryOrder
 from ..utils.exchange_rates import ExchangeRateService
+
+logger = logging.getLogger(__name__)
 
 class PaymentService:
     """Service for handling cryptocurrency payments"""
