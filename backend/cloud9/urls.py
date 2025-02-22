@@ -26,6 +26,7 @@ urlpatterns = [
     path('dashboard/', include('oscar.apps.dashboard.urls')),
     path('profile/', include('marketplace.views.urls')),
     path('cart/', include('marketplace.urls.cart')),
+    path('checkout/', include('marketplace.urls.checkout')),
     path('crypto-payments/', include('crypto_payments.urls')),
     path('tor/', include('tor_access.urls')),
     path('support/', include('support.urls')),
