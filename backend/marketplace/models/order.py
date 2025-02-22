@@ -25,6 +25,21 @@ class DeliveryOrder(AbstractOrder):
         ('pickup', 'Pickup')
     ]
     
+    # Real-time tracking settings
+    enable_real_time_tracking = models.BooleanField(
+        default=False,
+        help_text=_('Enable real-time location tracking for this delivery')
+    )
+    driver_location_permission = models.BooleanField(
+        default=False,
+        help_text=_('Driver has granted permission for location tracking')
+    )
+    last_location_update = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text=_('Timestamp of last location update')
+    )
+    
     class Meta:
         app_label = 'marketplace'
         verbose_name = _('Delivery Order')
@@ -52,17 +67,41 @@ class DeliveryOrder(AbstractOrder):
         except OrderStatus.DoesNotExist:
             return 'pending'
             
-    def set_status(self, new_status, changed_by=None, notes=''):
-        """Set new order status with tracking"""
+    def set_status(self, new_status, changed_by=None, notes='', location=None):
+        """Set new order status with tracking and optional location"""
         if new_status not in dict(OrderStatus.STATUS_CHOICES):
             raise ValueError(f"Invalid status: {new_status}")
             
-        OrderStatus.objects.create(
+        # Validate completion timeframes
+        if new_status == 'completed':
+            if self.delivery_type in ['mail', 'pickup']:
+                min_completion = self.date_placed + timedelta(days=self.MAIL_PICKUP_MIN_DAYS)
+                if timezone.now() < min_completion:
+                    raise ValueError(f'Cannot complete {self.delivery_type} orders before {self.MAIL_PICKUP_MIN_DAYS} days')
+            elif self.delivery_type == 'instant':
+                max_completion = self.date_placed + timedelta(hours=self.INSTANT_DELIVERY_MAX_HOURS)
+                if timezone.now() > max_completion:
+                    raise ValueError(f'Instant delivery orders must be completed within {self.INSTANT_DELIVERY_MAX_HOURS} hours')
+        
+        status = OrderStatus.objects.create(
             order=self,
             status=new_status,
             changed_by=changed_by,
             notes=notes
         )
+        
+        # Update location if provided
+        if location and isinstance(location, dict):
+            DeliveryTracking.objects.create(
+                order=self,
+                latitude=location.get('latitude'),
+                longitude=location.get('longitude'),
+                status_update=new_status
+            )
+            
+            if self.enable_real_time_tracking and self.driver_location_permission:
+                self.last_location_update = timezone.now()
+                self.save()
     delivery_address = models.TextField(max_length=500)
     delivery_instructions = models.TextField(max_length=500, blank=True)
     tracking_number = models.CharField(max_length=100, blank=True)
@@ -112,9 +151,9 @@ class OrderDispute(models.Model):
 
 class DeliveryTracking(models.Model):
     """
-    Real-time tracking for deliveries
+    Real-time and manual tracking for deliveries
     """
-    order = models.ForeignKey(DeliveryOrder, on_delete=models.CASCADE)
+    order = models.ForeignKey(DeliveryOrder, on_delete=models.CASCADE, related_name='tracking_updates')
     latitude = models.DecimalField(
         max_digits=9,
         decimal_places=6,
@@ -133,6 +172,14 @@ class DeliveryTracking(models.Model):
     )
     status_update = models.CharField(max_length=200)
     timestamp = models.DateTimeField(auto_now_add=True)
+    is_manual_update = models.BooleanField(
+        default=True,
+        help_text=_('Whether this is a manual status update vs real-time tracking')
+    )
+    driver_notes = models.TextField(
+        blank=True,
+        help_text=_('Additional notes from driver for manual updates')
+    )
     
     class Meta:
         app_label = 'marketplace'
