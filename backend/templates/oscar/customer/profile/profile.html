@@ -1,12 +1,8 @@
-{% extends "oscar/customer/profile/base.html" %}
+{% extends "customer/profile/base.html" %}
 {% load i18n %}
 {% load currency_display %}
 
-{% block title %}
-{% trans "Display Preferences" %} | {{ block.super }}
-{% endblock %}
-
-{% block profile_content %}
+{% block tabcontent %}
 <div class="profile-preferences">
     <h2>{% trans "Display Preferences" %}</h2>
     
@@ -66,9 +62,9 @@
     </form>
 </div>
 
-{% endblock %}
+{% endblock tabcontent %}
 
-{% block styles %}
+{% block onbodyload %}
 {{ block.super }}
 <style type="text/css">
 .profile-preferences {
@@ -89,4 +85,4 @@
     display: block;
 }
 </style>
-{% endblock %}
+{% endblock onbodyload %}
