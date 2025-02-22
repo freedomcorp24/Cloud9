@@ -1,6 +1,10 @@
-{% extends "customer/profile/base.html" %}
+{% extends "oscar/customer/profile/base.html" %}
 {% load i18n %}
 {% load currency_display %}
+
+{% block title %}
+{% trans "Display Preferences" %} | {{ block.super }}
+{% endblock %}
 
 {% block profile_content %}
 <div class="profile-preferences">
@@ -12,7 +16,7 @@
         <div class="form-group">
             <label>{% trans "Display Currency" %}</label>
             <select name="display_currency" class="form-control">
-                {% for code, name in currency_choices %}
+                {% for code in currency_choices %}
                 <option value="{{ code }}" {% if code == object.display_currency %}selected{% endif %}>
                     {{ code }}
                 </option>
@@ -62,7 +66,9 @@
     </form>
 </div>
 
-<style nonce="{{ request.csp_nonce }}">
+{% block extrastyles %}
+{{ block.super }}
+<style>
 .profile-preferences {
     max-width: 600px;
     margin: 0 auto;
@@ -81,4 +87,5 @@
     display: block;
 }
 </style>
+{% endblock %}
 {% endblock %}
