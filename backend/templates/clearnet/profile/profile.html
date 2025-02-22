@@ -78,7 +78,7 @@
                                 <label for="currency" class="form-label">{% trans "Display Currency" %}</label>
                                 <select class="form-select" id="currency" name="currency">
                                     {% for currency in SUPPORTED_CURRENCIES %}
-                                        <option value="{{ currency.0 }}" {% if currency.0 == user.profile.currency %}selected{% endif %}>
+                                        <option value="{{ currency.0 }}" {% if currency.0 == user.user_profile.preferred_currency %}selected{% endif %}>
                                             {{ currency.1 }}
                                         </option>
                                     {% endfor %}
@@ -88,7 +88,7 @@
                                 <label for="language" class="form-label">{% trans "Language" %}</label>
                                 <select class="form-select" id="language" name="language">
                                     {% for language in LANGUAGES %}
-                                        <option value="{{ language.0 }}" {% if language.0 == user.profile.language %}selected{% endif %}>
+                                        <option value="{{ language.0 }}" {% if language.0 == user.user_profile.language %}selected{% endif %}>
                                             {{ language.1 }}
                                         </option>
                                     {% endfor %}
