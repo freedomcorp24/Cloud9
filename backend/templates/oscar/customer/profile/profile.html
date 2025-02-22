@@ -42,26 +42,30 @@
         </div>
         
         <div class="form-group">
-            <div class="checkbox">
-                <label>
-                    <input type="checkbox" name="auto_detect_language" 
-                           {% if object.auto_detect_language %}checked{% endif %}>
-                    {% trans "Automatically detect language from browser" %}
-                </label>
-            </div>
-            <div class="checkbox">
-                <label>
-                    <input type="checkbox" name="auto_detect_currency" 
-                           {% if object.auto_detect_currency %}checked{% endif %}>
-                    {% trans "Automatically detect currency from location" %}
-                </label>
+            <div class="controls">
+                <div class="checkbox">
+                    <label>
+                        <input type="checkbox" name="auto_detect_language" 
+                               {% if object.auto_detect_language %}checked{% endif %}>
+                        {% trans "Automatically detect language from browser" %}
+                    </label>
+                </div>
+                <div class="checkbox">
+                    <label>
+                        <input type="checkbox" name="auto_detect_currency" 
+                               {% if object.auto_detect_currency %}checked{% endif %}>
+                        {% trans "Automatically detect currency from location" %}
+                    </label>
+                </div>
             </div>
         </div>
         
-        <div class="form-actions">
-            <button type="submit" class="btn btn-primary">
-                {% trans "Update Preferences" %}
-            </button>
+        <div class="form-group">
+            <div class="controls">
+                <button type="submit" class="btn btn-primary">
+                    {% trans "Update Preferences" %}
+                </button>
+            </div>
         </div>
     </form>
 </div>
