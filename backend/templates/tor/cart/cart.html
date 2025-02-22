@@ -32,15 +32,23 @@
                             <form method="post" action="{% url 'cart:update' item_id=item.id %}">
                                 {% csrf_token %}
                                 <select name="quantity">
-                                    {% with ''|center:100 as range %}
-                                        {% for _ in range %}
-                                            {% with forloop.counter as i %}
-                                                <option value="{{ i }}" {% if item.quantity == i %}selected{% endif %}>
-                                                    {{ i }}
-                                                </option>
-                                            {% endwith %}
-                                        {% endfor %}
-                                    {% endwith %}
+                                    {% for i in "123456789"|make_list %}
+                                        <option value="{{ i }}" {% if item.quantity == i %}selected{% endif %}>{{ i }}</option>
+                                    {% endfor %}
+                                    {% for i in "1234567890"|make_list %}
+                                        <option value="1{{ i }}" {% if item.quantity == 1|add:i %}selected{% endif %}>1{{ i }}</option>
+                                    {% endfor %}
+                                    {% for i in "123456789"|make_list %}
+                                        <option value="2{{ i }}" {% if item.quantity == 2|add:i %}selected{% endif %}>2{{ i }}</option>
+                                    {% endfor %}
+                                    <option value="30" {% if item.quantity == 30 %}selected{% endif %}>30</option>
+                                    <option value="40" {% if item.quantity == 40 %}selected{% endif %}>40</option>
+                                    <option value="50" {% if item.quantity == 50 %}selected{% endif %}>50</option>
+                                    <option value="60" {% if item.quantity == 60 %}selected{% endif %}>60</option>
+                                    <option value="70" {% if item.quantity == 70 %}selected{% endif %}>70</option>
+                                    <option value="80" {% if item.quantity == 80 %}selected{% endif %}>80</option>
+                                    <option value="90" {% if item.quantity == 90 %}selected{% endif %}>90</option>
+                                    <option value="100" {% if item.quantity == 100 %}selected{% endif %}>100</option>
                                 </select>
                                 <button type="submit">{% trans "Update" %}</button>
                             </form>
