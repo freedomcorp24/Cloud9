@@ -1,5 +1,40 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from django.utils.text import slugify
+from oscar.core.loading import get_model
+
+Category = get_model('catalogue', 'Category')
+
+class UncategorizedProductManager:
+    """Manages products without categories."""
+    
+    UNCATEGORIZED_SLUG = 'uncategorized'
+    
+    @classmethod
+    def get_uncategorized_category(cls) -> Category:
+        """Get or create the Uncategorized category."""
+        return Category.objects.get_or_create(
+            slug=cls.UNCATEGORIZED_SLUG,
+            defaults={
+                'name': _('Uncategorized'),
+                'description': _('Products without a specific category'),
+                'is_public': True,
+            }
+        )[0]
+    
+    @classmethod
+    def move_to_uncategorized(cls, products) -> None:
+        """Move products to the Uncategorized category."""
+        uncategorized = cls.get_uncategorized_category()
+        for product in products:
+            product.categories.add(uncategorized)
+            product.save()
+    
+    @classmethod
+    def get_uncategorized_products(cls):
+        """Get all products in the Uncategorized category."""
+        uncategorized = cls.get_uncategorized_category()
+        return uncategorized.product_set.all()
 
 class ProductCategory(models.Model):
     """
