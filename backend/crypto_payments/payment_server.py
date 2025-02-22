@@ -11,6 +11,8 @@ import logging
 import requests
 from .models import CryptoWallet, CryptoTransaction
 from .models.blacklist import AddressBlacklist
+from .models.security import SecurityThreshold, AccountFreeze, WithdrawalAutomation
+from .services.security import SecurityService
 from .node_integration import NodeFactory
 
 logger = logging.getLogger(__name__)
@@ -126,6 +128,7 @@ class PaymentServer:
     """
     def __init__(self):
         self.security = SecurityCheck()
+        self.security_service = SecurityService()
     
     def process_withdrawal(
         self,
@@ -139,33 +142,90 @@ class PaymentServer:
         Returns transaction hash if successful
         """
         try:
+            # Verify wallet type
+            if wallet.wallet_type not in ['hot', 'withdrawal']:
+                logger.error(f"Invalid wallet type for withdrawal: {wallet.wallet_type}")
+                raise ValueError("Invalid wallet type for withdrawal")
+                
             payload = {
-                'wallet_id': wallet.id,
+                'wallet_id': str(wallet.pk),
                 'amount': str(amount),
                 'destination': destination,
                 'timestamp': int(time.time())
             }
             
+            # Check for account freezes
+            if self.security_service.check_wallet_frozen(wallet):
+                logger.warning(f"Attempted withdrawal from frozen wallet: {wallet.pk}")
+                raise ValueError("Account is frozen")
+
             # Security checks
             if not self.security.verify_signature(payload, signature):
-                logger.warning(f"Invalid signature for withdrawal from wallet {wallet.id}")
+                logger.warning(f"Invalid signature for withdrawal from wallet {wallet.pk}")
+                self.security_service.freeze_account(
+                    wallet=wallet,
+                    freeze_type='automated',
+                    reason='Invalid transaction signature'
+                )
                 raise ValueError("Invalid transaction signature")
                 
             if not self.security.validate_withdrawal_limits(wallet, amount):
-                logger.warning(f"Withdrawal limit exceeded for wallet {wallet.id}")
+                logger.warning(f"Withdrawal limit exceeded for wallet {wallet.pk}")
+                self.security_service.freeze_account(
+                    wallet=wallet,
+                    freeze_type='automated',
+                    reason='Withdrawal limit exceeded',
+                    expires_at=timezone.now() + timezone.timedelta(hours=24)
+                )
                 raise ValueError("Withdrawal limit exceeded")
                 
             if not self.security.check_address_history(destination):
                 logger.warning(f"Suspicious destination address: {destination}")
+                self.security_service.freeze_account(
+                    wallet=wallet,
+                    freeze_type='suspicious',
+                    reason=f'Suspicious withdrawal to address: {destination}'
+                )
                 raise ValueError("Destination address flagged as suspicious")
+                
+            # Check withdrawal automation rules
+            automation_type = self.security_service.check_withdrawal_automation(wallet, amount)
+            if not automation_type:
+                logger.info(f"Manual review required for withdrawal from wallet {wallet.pk}")
+                raise ValueError("Manual review required for this withdrawal")
             
             # Verify wallet balance
             if wallet.balance < amount:
-                logger.warning(f"Insufficient balance in wallet {wallet.id}")
+                logger.warning(f"Insufficient balance in wallet {wallet.pk}")
                 raise ValueError("Insufficient balance")
             
             # Process withdrawal through full node
-            node = NodeFactory.get_node(wallet.currency)
+            node = NodeFactory.get_node(wallet.currency_type)
+            
+            # Check if hot wallet needs replenishment
+            if wallet.wallet_type == 'hot' and wallet.balance < amount:
+                cold_wallet = wallet.get_cold_wallet()
+                if cold_wallet:
+                    # Calculate replenishment amount (include withdrawal amount plus buffer)
+                    buffer = Decimal(settings.HOT_WALLET_BUFFER)
+                    replenish_amount = amount + buffer - wallet.balance
+                    
+                    replenish_tx = self._create_signed_transaction(
+                        cold_wallet,
+                        replenish_amount,
+                        wallet.address
+                    )
+                    tx_hash = node.broadcast_transaction(replenish_tx)
+                    
+                    if tx_hash:
+                        # Update balances after successful replenishment
+                        cold_wallet.balance -= replenish_amount
+                        wallet.balance += replenish_amount
+                        wallet.last_rebalance = timezone.now()
+                        cold_wallet.save()
+                        wallet.save()
+                        
+                        logger.info(f"Replenished hot wallet with {replenish_amount} from cold storage: {tx_hash}")
             
             # Create and sign transaction
             signed_tx = self._create_signed_transaction(
@@ -208,17 +268,19 @@ class PaymentServer:
         """
         try:
             # Get node for currency
-            node = NodeFactory.get_node(wallet.currency)
+            node = NodeFactory.get_node(wallet.currency_type)
             
             # Additional security checks before signing
             if not self._validate_transaction_parameters(wallet, amount, destination):
+                logger.error(f"Invalid transaction parameters for {wallet.currency_type} transaction")
                 raise ValueError("Invalid transaction parameters")
             
             # Create transaction (actual implementation in node integration)
             return node.create_transaction(
                 source_address=wallet.address,
                 destination_address=destination,
-                amount=amount
+                amount=amount,
+                min_confirmations=settings.WITHDRAWAL_CONFIRMATION_BLOCKS
             )
         except Exception as e:
             logger.error(f"Failed to create transaction: {str(e)}")
@@ -237,7 +299,8 @@ class PaymentServer:
                 return False
                 
             # Verify destination address format
-            if not self._is_valid_address_format(wallet.currency, destination):
+            if not self._is_valid_address_format(wallet.currency_type, destination):
+                logger.warning(f"Invalid {wallet.currency_type} address format: {destination}")
                 return False
                 
             # Check for recent failed attempts
@@ -259,13 +322,17 @@ class PaymentServer:
         """Validate cryptocurrency address format"""
         try:
             if currency.upper() == 'BTC':
-                # Bitcoin address validation
-                return len(address) >= 26 and len(address) <= 35
+                # Bitcoin address validation (supports legacy, segwit and native segwit)
+                return len(address) >= 26 and len(address) <= 62 and not address.startswith('0x')
             elif currency.upper() == 'XMR':
-                # Monero address validation
-                return len(address) == 95
+                # Monero address validation (standard address)
+                return len(address) == 95 and not address.startswith('0x')
+            elif currency.upper() == 'USDT':
+                # Ethereum address validation (USDT contract)
+                return len(address) == 42 and address.startswith('0x') and all(c in '0123456789abcdefABCDEF' for c in address[2:])
             return False
         except Exception:
+            logger.error(f"Error validating {currency} address format: {address}")
             return False
     
     def verify_deposit(
@@ -275,13 +342,21 @@ class PaymentServer:
     ) -> bool:
         """
         Verify deposit through full node with security checks
+        Automatically moves excess funds to cold storage if threshold exceeded
         """
         try:
             # Get node for currency
-            node = NodeFactory.get_node(wallet.currency)
+            node = NodeFactory.get_node(wallet.currency_type)
+            
+            # Get confirmation requirement based on currency
+            min_confirmations = {
+                'BTC': settings.BTC_MIN_CONFIRMATIONS,
+                'XMR': settings.XMR_MIN_CONFIRMATIONS,
+                'USDT': settings.USDT_MIN_CONFIRMATIONS
+            }.get(wallet.currency_type.upper(), settings.DEFAULT_MIN_CONFIRMATIONS)
             
             # Verify transaction exists and has required confirmations
-            if not node.validate_transaction(tx_hash):
+            if not node.validate_transaction(tx_hash, min_confirmations=min_confirmations):
                 logger.warning(f"Transaction validation failed for {tx_hash}")
                 return False
             
@@ -309,9 +384,43 @@ class PaymentServer:
                 status='completed'
             )
             
+            deposit_amount = Decimal(tx_details['amount'])
+            
             # Update wallet balance
-            wallet.balance += Decimal(tx_details['amount'])
+            wallet.balance += deposit_amount
             wallet.save()
+            
+            # Check if hot wallet needs rebalancing after deposit
+            if wallet.wallet_type == 'hot' and wallet.needs_rebalancing():
+                cold_wallet = wallet.get_cold_wallet()
+                if cold_wallet:
+                    excess_amount = wallet.get_excess_amount()
+                    transfer_tx = self._create_signed_transaction(
+                        wallet,
+                        excess_amount,
+                        cold_wallet.address
+                    )
+                    tx_hash = node.broadcast_transaction(transfer_tx)
+                    
+                    if tx_hash:
+                        # Update balances after successful transfer
+                        wallet.balance -= excess_amount
+                        cold_wallet.balance += excess_amount
+                        wallet.last_rebalance = timezone.now()
+                        wallet.save()
+                        cold_wallet.save()
+                        
+                        # Record transfer transaction
+                        CryptoTransaction.objects.create(
+                            wallet=wallet,
+                            tx_hash=tx_hash,
+                            amount_crypto=excess_amount,
+                            transaction_type='transfer',
+                            status='completed',
+                            destination_address=cold_wallet.address
+                        )
+                        
+                        logger.info(f"Moved {excess_amount} to cold storage after deposit: {tx_hash}")
             
             logger.info(f"Deposit verified successfully: {tx_hash}")
             return True

@@ -2,7 +2,7 @@ from django.db import models
 from django.conf import settings
 import hashlib
 import secrets
-from .models import CryptoWallet, Transaction
+from .models import CryptoWallet, CryptoTransaction
 
 class WalletManager:
     """
@@ -49,7 +49,7 @@ class WalletManager:
             
         self.wallet.save()
         
-        Transaction.objects.create(
+        CryptoTransaction.objects.create(
             wallet=self.wallet,
             amount=amount,
             transaction_type=transaction_type,

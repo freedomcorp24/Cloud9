@@ -1,5 +1,5 @@
 from django.conf import settings
-from .models import CryptoWallet, Transaction
+from .models import CryptoWallet, CryptoTransaction
 from .wallet import WalletManager
 import requests
 
