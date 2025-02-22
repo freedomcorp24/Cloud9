@@ -1,0 +1,104 @@
+{% extends "clearnet/base.html" %}
+{% load i18n %}
+{% load currency_display %}
+{% load static %}
+
+{% block title %}
+    {% trans 'Profile' %} | {{ block.super }}
+{% endblock %}
+
+{% block breadcrumbs %}
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'clearnet:home' %}">{% trans "Home" %}</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{% trans "Profile" %}</li>
+        </ol>
+    </nav>
+{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title">{% trans "Account Information" %}</h5>
+                        <p><strong>{% trans "Public Username:" %}</strong> {{ user.public_username }}</p>
+                        <p><strong>{% trans "Member Since:" %}</strong> {{ user.date_joined|date }}</p>
+                        <p><strong>{% trans "Last Login:" %}</strong> {{ user.last_login|date }}</p>
+                        <a href="{% url 'profile:edit' %}" class="btn btn-primary">{% trans "Edit Profile" %}</a>
+                    </div>
+                </div>
+                
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title">{% trans "Security" %}</h5>
+                        <p>{% trans "2FA Status:" %} 
+                            {% if user.profile.pgp_enabled %}
+                                <span class="badge bg-success">{% trans "Enabled" %}</span>
+                            {% else %}
+                                <span class="badge bg-warning">{% trans "Disabled" %}</span>
+                            {% endif %}
+                        </p>
+                        <a href="{% url 'profile:security' %}" class="btn btn-outline-primary">{% trans "Security Settings" %}</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-8">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title">{% trans "Recent Orders" %}</h5>
+                        {% if recent_orders %}
+                            <div class="list-group">
+                                {% for order in recent_orders %}
+                                    <a href="{% url 'clearnet:order_detail' order.id %}" class="list-group-item list-group-item-action">
+                                        <div class="d-flex w-100 justify-content-between">
+                                            <h6 class="mb-1">{{ order.title }}</h6>
+                                            <small>{{ order.created_at|date }}</small>
+                                        </div>
+                                        <p class="mb-1">{% trans "Status:" %} {{ order.get_status_display }}</p>
+                                        <small>{% trans "Order ID:" %} {{ order.id }}</small>
+                                    </a>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <p class="text-muted">{% trans "No recent orders" %}</p>
+                        {% endif %}
+                        <a href="{% url 'clearnet:orders' %}" class="btn btn-link">{% trans "View All Orders" %}</a>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">{% trans "Preferences" %}</h5>
+                        <form method="post" action="{% url 'profile:update_preferences' %}">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label for="currency" class="form-label">{% trans "Display Currency" %}</label>
+                                <select class="form-select" id="currency" name="currency">
+                                    {% for currency in SUPPORTED_CURRENCIES %}
+                                        <option value="{{ currency.0 }}" {% if currency.0 == user.profile.currency %}selected{% endif %}>
+                                            {{ currency.1 }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="language" class="form-label">{% trans "Language" %}</label>
+                                <select class="form-select" id="language" name="language">
+                                    {% for language in LANGUAGES %}
+                                        <option value="{{ language.0 }}" {% if language.0 == user.profile.language %}selected{% endif %}>
+                                            {{ language.1 }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary">{% trans "Save Preferences" %}</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

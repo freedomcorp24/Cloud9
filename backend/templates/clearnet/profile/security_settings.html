@@ -1,0 +1,98 @@
+{% extends "clearnet/base.html" %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}
+    {% trans 'Security Settings' %} | {{ block.super }}
+{% endblock %}
+
+{% block breadcrumbs %}
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'clearnet:home' %}">{% trans "Home" %}</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'profile:profile' %}">{% trans "Profile" %}</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{% trans "Security Settings" %}</li>
+        </ol>
+    </nav>
+{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <div class="row">
+            <div class="col-md-8 offset-md-2">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title">{% trans "PGP Key Management" %}</h5>
+                        {% if user.profile.pgp_key %}
+                            <div class="alert alert-success">
+                                <h6>{% trans "Current PGP Key" %}</h6>
+                                <pre class="mb-0"><code>{{ user.profile.pgp_key }}</code></pre>
+                            </div>
+                            <form method="post" action="{% url 'profile:remove_pgp_key' %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger">{% trans "Remove PGP Key" %}</button>
+                            </form>
+                        {% else %}
+                            <form method="post" action="{% url 'profile:add_pgp_key' %}">
+                                {% csrf_token %}
+                                <div class="mb-3">
+                                    <label for="pgp_key" class="form-label">{% trans "Add PGP Key" %}</label>
+                                    <textarea class="form-control" id="pgp_key" name="pgp_key" rows="5" required></textarea>
+                                    <div class="form-text">{% trans "Paste your public PGP key here" %}</div>
+                                </div>
+                                <button type="submit" class="btn btn-primary">{% trans "Add Key" %}</button>
+                            </form>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title">{% trans "Two-Factor Authentication" %}</h5>
+                        {% if user.profile.pgp_enabled %}
+                            <p class="text-success">{% trans "2FA is currently enabled using your PGP key" %}</p>
+                            <form method="post" action="{% url 'profile:disable_2fa' %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-warning">{% trans "Disable 2FA" %}</button>
+                            </form>
+                        {% else %}
+                            <p class="text-warning">{% trans "2FA is currently disabled" %}</p>
+                            {% if user.profile.pgp_key %}
+                                <form method="post" action="{% url 'profile:enable_2fa' %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-success">{% trans "Enable 2FA" %}</button>
+                                </form>
+                            {% else %}
+                                <div class="alert alert-info">
+                                    {% trans "You need to add a PGP key before enabling 2FA" %}
+                                </div>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">{% trans "Transaction PIN" %}</h5>
+                        <form method="post" action="{% url 'profile:change_pin' %}">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label for="current_pin" class="form-label">{% trans "Current PIN" %}</label>
+                                <input type="password" class="form-control" id="current_pin" name="current_pin" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="new_pin" class="form-label">{% trans "New PIN" %}</label>
+                                <input type="password" class="form-control" id="new_pin" name="new_pin" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="confirm_pin" class="form-label">{% trans "Confirm New PIN" %}</label>
+                                <input type="password" class="form-control" id="confirm_pin" name="confirm_pin" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">{% trans "Change PIN" %}</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

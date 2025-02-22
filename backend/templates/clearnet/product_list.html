@@ -1,0 +1,83 @@
+{% extends "clearnet/base.html" %}
+{% load currency_display %}
+
+{% block content %}
+<div class="container">
+    {% if current_category %}
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'clearnet:home' %}">Home</a></li>
+                {% for ancestor in current_category.get_ancestors %}
+                    <li class="breadcrumb-item">
+                        <a href="{% url 'clearnet:category_products' ancestor.slug %}">
+                            {{ ancestor.name }}
+                        </a>
+                    </li>
+                {% endfor %}
+                <li class="breadcrumb-item active">{{ current_category.name }}</li>
+            </ol>
+        </nav>
+        <h1 class="mb-4">{{ current_category.name }}</h1>
+        {% if current_category.description %}
+            <p class="lead mb-4">{{ current_category.description }}</p>
+        {% endif %}
+    {% else %}
+        <h1 class="mb-4">All Products</h1>
+    {% endif %}
+
+    <div class="row">
+        {% for product in products %}
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    {% if product.images %}
+                        <img src="{{ product.images.0 }}" class="card-img-top" alt="{{ product.title }}">
+                    {% endif %}
+                    <div class="card-body">
+                        <h5 class="card-title">{{ product.title }}</h5>
+                        <p class="card-text">{{ product.description|truncatewords:20 }}</p>
+                        <p class="card-text">
+                            <strong>Price:</strong> {% display_price product.price user_currency %}
+                        </p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="btn-group">
+                                <a href="{% url 'clearnet:product_detail' product.slug %}" class="btn btn-sm btn-outline-primary">View Details</a>
+                            </div>
+                            <small class="text-muted">{{ product.vendor.public_username }}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12">
+                <div class="alert alert-info">
+                    No products found in this category.
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    {% if is_paginated %}
+        <nav aria-label="Page navigation" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                    </li>
+                {% endif %}
+                
+                {% for num in page_obj.paginator.page_range %}
+                    <li class="page-item {% if num == page_obj.number %}active{% endif %}">
+                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                    </li>
+                {% endfor %}
+                
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    {% endif %}
+</div>
+{% endblock %}
