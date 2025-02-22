@@ -32,13 +32,8 @@
                             <form method="post" action="{% url 'cart:update' item_id=item.id %}">
                                 {% csrf_token %}
                                 <select name="quantity">
-                                    {% with ''|ljust:100 as range %}
-                                    {% for _ in range %}
-                                    <option value="{{ forloop.counter }}" {% if item.quantity == forloop.counter %}selected{% endif %}>
-                                        {{ forloop.counter }}
-                                    </option>
-                                    {% endfor %}
-                                    {% endwith %}
+                                    {% load cart_tags %}
+                                    {% quantity_options item.quantity %}
                                 </select>
                                 <button type="submit">{% trans "Update" %}</button>
                             </form>

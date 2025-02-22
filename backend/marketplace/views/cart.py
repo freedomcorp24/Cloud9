@@ -3,10 +3,12 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import redirect, get_object_or_404
 from django.urls import reverse_lazy
 from django.contrib import messages
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext as gettext_
 from django.db import transaction
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.core.exceptions import ValidationError
+
+_ = gettext_  # Alias for translation function
 from ..models.cart import Cart, CartItem
 from ..models.product import ProductListing
 from ..models.vendor import VendorProfile
