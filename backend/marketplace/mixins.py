@@ -4,8 +4,9 @@ from django.contrib import messages
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.views.generic.base import ContextMixin
-from typing import Optional, Any
+from typing import Optional, Any, cast
 from django.http import HttpRequest, HttpResponse
+from django.contrib.auth.models import AbstractUser
 
 class CategoryPermissionMixin(UserPassesTestMixin, ContextMixin):
     """Ensures only master admin can manage categories."""
@@ -15,7 +16,8 @@ class CategoryPermissionMixin(UserPassesTestMixin, ContextMixin):
     
     def test_func(self) -> bool:
         """Check if user is a superuser (master admin)."""
-        return self.request.user.is_superuser
+        user = cast(AbstractUser, self.request.user)
+        return user.is_superuser
     
     def handle_no_permission(self) -> HttpResponse:
         """Handle unauthorized access attempts."""
