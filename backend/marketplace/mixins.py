@@ -9,15 +9,21 @@ class CategoryPermissionMixin(UserPassesTestMixin):
     
     def test_func(self):
         """Check if user is a superuser (master admin)."""
+        # UserPassesTestMixin provides self.request
+        if not hasattr(self, 'request'):
+            return False
         return self.request.user.is_superuser
     
     def handle_no_permission(self):
         """Handle unauthorized access attempts."""
-        messages.error(self.request, "Only master admin can manage categories.")
-        return redirect(reverse('dashboard:catalogue-category-list'))
+        if hasattr(self, 'request'):
+            messages.error(self.request, "Only master admin can manage categories.")
+            return redirect(reverse('dashboard:catalogue-category-list'))
+        return super().handle_no_permission()
 
     def dispatch(self, request, *args, **kwargs):
         """Add user to instance for audit logging."""
-        if hasattr(self, 'object'):
-            self.object._current_user = request.user
-        return super().dispatch(request, *args, **kwargs)
+        response = super().dispatch(request, *args, **kwargs)
+        if hasattr(self, 'object') and self.object is not None:
+            setattr(self.object, '_current_user', request.user)
+        return response
