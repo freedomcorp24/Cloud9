@@ -2,6 +2,7 @@ from django import template
 from django.conf import settings
 from decimal import Decimal
 from django.utils.safestring import mark_safe
+from marketplace.utils.exchange_rates import get_exchange_rate, ExchangeRateError
 
 register = template.Library()
 
