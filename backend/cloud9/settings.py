@@ -1,12 +1,12 @@
 """
 Django settings for cloud9 project.
 """
-from oscar.defaults import *
 from pathlib import Path
 import environ
 import os
-import dj_database_url
 from decimal import Decimal
+from oscar.defaults import *
+import dj_database_url
 
 # Initialize environment variables
 env = environ.Env()
@@ -19,13 +19,18 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-z=(qc38pz!2u20#^uw5w89dq7bcto*qs0v2$mxf81!j%sm_t1r'
+# Security Settings
+SECRET_KEY = env('DJANGO_SECRET_KEY', default='THC9CBD#2025!j8k3m4n5p6q7r8s9t0uvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ')
+DEBUG = env.bool('DJANGO_DEBUG', default=False)
+ALLOWED_HOSTS = env.list('DJANGO_ALLOWED_HOSTS', default=['localhost', '127.0.0.1'])
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = []
+# Security Headers
+SECURE_SSL_REDIRECT = True
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+SECURE_HSTS_SECONDS = 31536000  # 1 year
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
 
 
 # Application definition
