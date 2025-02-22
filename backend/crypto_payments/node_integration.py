@@ -571,6 +571,12 @@ class USDTNode(CryptoNode):
             # Remove '0x' prefix if present
             tx_hex = signed_tx[2:] if signed_tx.startswith('0x') else signed_tx
             tx_hash = self.web3.eth.send_raw_transaction(bytes.fromhex(tx_hex))
+            
+            # Wait for transaction receipt
+            receipt = self.web3.eth.wait_for_transaction_receipt(tx_hash)
+            if not receipt.status:
+                raise NodeError("USDT transaction failed")
+                
             return self.web3.to_hex(tx_hash)
         except Exception as e:
             logger.error(f"Failed to broadcast USDT transaction: {str(e)}")
