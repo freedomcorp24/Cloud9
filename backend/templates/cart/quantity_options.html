@@ -1,1 +1,1 @@
-{% for i in options %}<option value="{{ i }}"{% if i == current_quantity %} selected{% endif %}>{{ i }}</option>{% endfor %}
+{{ current_quantity|quantity_options }}
