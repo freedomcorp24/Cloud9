@@ -6,8 +6,12 @@ from django.utils import timezone
 from django.db import transaction
 from datetime import timedelta
 from decimal import Decimal
+import logging
 from .cart import Cart
 from .order import DeliveryOrder
+from ..services.payment import PaymentService
+
+logger = logging.getLogger(__name__)
 
 class CheckoutSession(models.Model):
     """
@@ -90,13 +94,16 @@ class CheckoutSession(models.Model):
             
         return False
         
-    def create_order(self):
+    def create_order(self, payment_currency: str = None):
         """Create order from checkout session"""
         if not self.is_pin_verification_valid():
             raise ValueError(_('PIN verification required'))
             
         if not self.validate_completion_window():
             raise ValueError(_('Invalid completion window'))
+            
+        if payment_currency and payment_currency.upper() not in ['BTC', 'XMR', 'USDT']:
+            raise ValueError(_('Invalid payment currency'))
             
         with transaction.atomic():
             order = DeliveryOrder.objects.create(
@@ -115,6 +122,20 @@ class CheckoutSession(models.Model):
                     quantity=item.quantity,
                     unit_price=item.unit_price
                 )
+                
+            # Create payment address if currency specified
+            if payment_currency:
+                try:
+                    payment_service = PaymentService()
+                    payment_info = payment_service.create_payment_address(
+                        order=order,
+                        currency=payment_currency
+                    )
+                    logger.info(f"Created payment address for order {order.id}: {payment_info}")
+                except Exception as e:
+                    logger.error(f"Failed to create payment address: {str(e)}")
+                    order.delete()
+                    raise ValueError(_('Failed to create payment address'))
                 
             # Clear cart
             self.cart.delete()
