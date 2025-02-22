@@ -21,7 +21,7 @@ class DeliveryOrder(AbstractOrder):
         ('pickup', 'Pickup')
     ]
     
-    class Meta(AbstractOrder.Meta):
+    class Meta:
         app_label = 'marketplace'
         verbose_name = _('Delivery Order')
         verbose_name_plural = _('Delivery Orders')

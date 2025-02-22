@@ -41,7 +41,7 @@ class VendorProduct(AbstractStockRecord):
     """
     partner = models.ForeignKey(VendorProfile, on_delete=models.CASCADE, related_name='vendor_stockrecords', default=1)
     product = models.ForeignKey('catalogue.Product', on_delete=models.CASCADE, related_name='vendor_stockrecords')
-    partner_sku = models.CharField(max_length=128, default='SKU-' + timezone.now().strftime('%Y%m%d-%H%M%S'))
+    partner_sku = models.CharField(max_length=128, default=lambda: 'SKU-' + timezone.now().strftime('%Y%m%d-%H%M%S'))
     instant_delivery = models.BooleanField(default=False)
     delivery_fee = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
     shipping_fee = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))

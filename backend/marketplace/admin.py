@@ -2,7 +2,7 @@ from django.contrib import admin
 from .models import (
     VendorProfile, VendorProduct, DeliveryOrder,
     OrderDispute, DeliveryTracking, UserWallet, 
-    WithdrawalAddress
+    WithdrawalAddress, PostageOption
 )
 
 @admin.register(VendorProfile)
@@ -82,6 +82,11 @@ class DeliveryTrackingAdmin(admin.ModelAdmin):
     ordering = ('-timestamp',)
 
 
+@admin.register(PostageOption)
+class PostageOptionAdmin(admin.ModelAdmin):
+    list_display = ('name', 'price')
+    search_fields = ('name',)
+    ordering = ('price',)
 
 @admin.register(UserWallet)
 class UserWalletAdmin(admin.ModelAdmin):

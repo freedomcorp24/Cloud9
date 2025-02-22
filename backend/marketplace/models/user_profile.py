@@ -14,12 +14,25 @@ class UserProfile(models.Model):
     )
     preferred_currency = models.CharField(
         max_length=4,  # Increased to accommodate 4-char currencies like 'USDT'
-        choices=settings.SUPPORTED_CURRENCIES,
+        choices=[
+            ('USD', 'US Dollar'),
+            ('EUR', 'Euro'),
+            ('GBP', 'British Pound'),
+            ('BTC', 'Bitcoin'),
+            ('XMR', 'Monero'),
+            ('USDT', 'Tether')
+        ],
         default='USD'
     )
     country = models.CharField(
         max_length=2,
-        choices=settings.COUNTRIES,
+        choices=[
+            ('US', 'United States'),
+            ('GB', 'United Kingdom'),
+            ('EU', 'European Union'),
+            ('CA', 'Canada'),
+            ('AU', 'Australia')
+        ],
         blank=True
     )
     pgp_key = models.TextField(blank=True)
