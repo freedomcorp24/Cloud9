@@ -10,14 +10,12 @@
         {% csrf_token %}
         
         <div class="form-group">
-            <label class="control-label">{% trans "Display Currency" %}</label>
-            <div class="controls">
+            <label class="control-label col-sm-3">{% trans "Display Currency" %}</label>
+            <div class="col-sm-9">
                 <select name="display_currency" class="form-control">
-                    {% for code, name in currency_choices %}
-                    <option value="{{ code }}" {% if code == object.display_currency %}selected{% endif %}>
-                        {{ name }}
-                    </option>
-                    {% endfor %}
+                {% for code, name in currency_choices %}
+                    <option value="{{ code }}"{% if code == object.display_currency %} selected{% endif %}>{{ name }}</option>
+                {% endfor %}
                 </select>
                 <span class="help-block crypto-notice">
                     {% trans "* Prices shown for reference only. Payments accepted in BTC, XMR, and USDT." %}
@@ -26,14 +24,12 @@
         </div>
         
         <div class="form-group">
-            <label class="control-label">{% trans "Language" %}</label>
-            <div class="controls">
+            <label class="control-label col-sm-3">{% trans "Language" %}</label>
+            <div class="col-sm-9">
                 <select name="language" class="form-control">
-                    {% for code, name in languages %}
-                    <option value="{{ code }}" {% if code == object.language %}selected{% endif %}>
-                        {{ name }}
-                    </option>
-                    {% endfor %}
+                {% for code, name in languages %}
+                    <option value="{{ code }}"{% if code == object.language %} selected{% endif %}>{{ name }}</option>
+                {% endfor %}
                 </select>
                 <span class="help-block">
                     {% trans "Choose your preferred language for the interface" %}
@@ -42,18 +38,16 @@
         </div>
         
         <div class="form-group">
-            <div class="controls">
+            <div class="col-sm-offset-3 col-sm-9">
                 <div class="checkbox">
                     <label>
-                        <input type="checkbox" name="auto_detect_language" 
-                               {% if object.auto_detect_language %}checked{% endif %}>
+                        <input type="checkbox" name="auto_detect_language"{% if object.auto_detect_language %} checked{% endif %}>
                         {% trans "Automatically detect language from browser" %}
                     </label>
                 </div>
                 <div class="checkbox">
                     <label>
-                        <input type="checkbox" name="auto_detect_currency" 
-                               {% if object.auto_detect_currency %}checked{% endif %}>
+                        <input type="checkbox" name="auto_detect_currency"{% if object.auto_detect_currency %} checked{% endif %}>
                         {% trans "Automatically detect currency from location" %}
                     </label>
                 </div>
@@ -61,7 +55,7 @@
         </div>
         
         <div class="form-group">
-            <div class="controls">
+            <div class="col-sm-offset-3 col-sm-9">
                 <button type="submit" class="btn btn-primary">
                     {% trans "Update Preferences" %}
                 </button>
