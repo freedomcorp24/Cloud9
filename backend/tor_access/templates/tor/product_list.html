@@ -1,0 +1,87 @@
+{% extends "tor/base.html" %}
+
+{% block title %}Products - Cloud 9 Marketplace{% endblock %}
+
+{% block content %}
+<div class="product-grid">
+    <h2>Available Products</h2>
+    
+    <form method="get" action="">
+        <div class="form-group">
+            <label for="category">Category:</label>
+            <select name="category" id="category">
+                <option value="">All Categories</option>
+                {% for category in categories %}
+                    <option value="{{ category.id }}" {% if selected_category == category.id %}selected{% endif %}>
+                        {{ category.name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="sort">Sort by:</label>
+            <select name="sort" id="sort">
+                <option value="price_asc">Price: Low to High</option>
+                <option value="price_desc">Price: High to Low</option>
+                <option value="rating">Rating</option>
+                <option value="newest">Newest First</option>
+            </select>
+        </div>
+        <button type="submit" class="btn">Apply Filters</button>
+    </form>
+
+    {% for product in products %}
+        <div class="product-item">
+            <h3>{{ product.title }}</h3>
+            <p>{{ product.description|truncatewords:30 }}</p>
+            <div class="product-details">
+                <p>Price: {{ product.price }} {{ product.currency }}</p>
+                <p>Vendor: {{ product.vendor.name }}</p>
+                <p>Rating: {{ product.rating }}/5 ({{ product.review_count }} reviews)</p>
+                {% if product.stock_level > 0 %}
+                    <p>In Stock ({{ product.stock_level }} available)</p>
+                {% else %}
+                    <p>Out of Stock</p>
+                {% endif %}
+            </div>
+            <form method="post" action="{% url 'add_to_cart' product.id %}">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="quantity">Quantity:</label>
+                    <input type="number" name="quantity" id="quantity" value="1" min="1" max="{{ product.stock_level }}">
+                </div>
+                <div class="form-group">
+                    <label for="postage">Shipping Option:</label>
+                    <select name="postage" id="postage" required>
+                        {% for option in product.postage_options.all %}
+                            <option value="{{ option.id }}">
+                                {{ option.name }} - {{ option.price }} {{ product.currency }}
+                                ({{ option.delivery_time }} days)
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="btn" {% if not product.stock_level %}disabled{% endif %}>
+                    Add to Cart
+                </button>
+            </form>
+        </div>
+    {% empty %}
+        <p>No products found matching your criteria.</p>
+    {% endfor %}
+
+    {% if is_paginated %}
+        <div class="pagination">
+            {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}">Previous</a>
+            {% endif %}
+            
+            <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+            
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}">Next</a>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
